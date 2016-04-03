@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SiliCompressor</string>
+    <string name="title_activity_select_picture">SilliCompressor Demo</string>
 </resources>

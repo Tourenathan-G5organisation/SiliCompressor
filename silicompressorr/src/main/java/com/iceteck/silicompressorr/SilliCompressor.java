@@ -48,6 +48,11 @@ public class SilliCompressor {
 
     }
 
+    /**
+     * Compresses the image at the specified Uri and and return the filepath of the compressed image.
+     * @param imageUri
+     * @return filepath
+     */
     public String compress(String imageUri){
         return compressImage(imageUri);
     }
