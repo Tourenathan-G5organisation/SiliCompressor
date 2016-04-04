@@ -25,20 +25,20 @@ import java.io.IOException;
  * @date 28/03/2016
  * Created by Toure on 28/03/2016.
  */
-public class SilliCompressor {
+public class SiliCompressor {
 
     private static Context mContext;
 
-    static volatile SilliCompressor singleton = null;
+    static volatile SiliCompressor singleton = null;
 
-    public SilliCompressor(Context context){
+    public SiliCompressor(Context context){
         mContext = context;
     }
 
     // initialise the class and set the context
-    public static SilliCompressor with(Context context){
+    public static SiliCompressor with(Context context){
         if (singleton == null) {
-            synchronized (SilliCompressor.class) {
+            synchronized (SiliCompressor.class) {
                 if (singleton == null) {
                     singleton = new Builder(context).build();
                 }
@@ -197,7 +197,7 @@ public class SilliCompressor {
     }
 
     private String getFilename() {
-        File file = new File(Environment.getExternalStorageDirectory().getPath(), "SilliCompressor/Images");
+        File file = new File(Environment.getExternalStorageDirectory().getPath(), "SiliCompressor/Images");
         if (!file.exists()) {
             file.mkdirs();
         }
@@ -246,12 +246,12 @@ public class SilliCompressor {
         }
     }
 
-    /** Fluent API for creating {@link SilliCompressor} instances. */
+    /** Fluent API for creating {@link SiliCompressor} instances. */
     public static class Builder {
 
         private final Context context;
 
-        /** Start building a new {@link SilliCompressor} instance. */
+        /** Start building a new {@link SiliCompressor} instance. */
         public Builder(Context context) {
             if (context == null) {
                 throw new IllegalArgumentException("Context must not be null.");
@@ -259,11 +259,11 @@ public class SilliCompressor {
             this.context = context.getApplicationContext();
         }
 
-        /** Create the {@link SilliCompressor} instance. */
-        public SilliCompressor build() {
+        /** Create the {@link SiliCompressor} instance. */
+        public SiliCompressor build() {
             Context context = this.context;
 
-            return new SilliCompressor(context);
+            return new SiliCompressor(context);
         }
     }
 

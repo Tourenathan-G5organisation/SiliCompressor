@@ -23,7 +23,7 @@
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_photo_camera_black_48dp"
+            android:src="@drawable/ic_photo_camera_white_48px"
             android:id="@+id/photo"
             />
     </LinearLayout>
@@ -37,7 +37,7 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="Name: nice_pic\nFile size: 20KB\nwidth: 700\nHeight: 1000"
             android:id="@+id/pic_description"
-            android:gravity="center"
+            android:gravity="left"
             android:visibility="gone"/>
     </LinearLayout>
 

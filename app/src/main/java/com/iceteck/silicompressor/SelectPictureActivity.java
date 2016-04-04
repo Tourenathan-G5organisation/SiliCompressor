@@ -16,7 +16,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.iceteck.silicompressorr.SilliCompressor;
+import com.iceteck.silicompressorr.SiliCompressor;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,6 +89,8 @@ public class SelectPictureActivity extends AppCompatActivity {
             // Continue only if the File was successfully created
             if (photoFile != null) {
                 capturedUri = Uri.fromFile(photoFile);
+                Log.d(LOG_TAG, "Log1: " + String.valueOf(capturedUri));
+                Log.d(LOG_TAG, "Log2: "  + capturedUri.toString());
 
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, capturedUri);
 
@@ -124,12 +126,12 @@ public class SelectPictureActivity extends AppCompatActivity {
         Context mContext;
 
         public ImageCompressionAsyncTask(Context context){
-mContext = context;
+                mContext = context;
         }
 
         @Override
         protected String doInBackground(String... params) {
-            String filePath = SilliCompressor.with(mContext).compress(params[0]);
+            String filePath = SiliCompressor.with(mContext).compress(params[0]);
             return filePath;
 
         }
@@ -137,10 +139,10 @@ mContext = context;
         @Override
         protected void onPostExecute(String s) {
             File imageFile = new File(s);
-            Uri imageUri = Uri.fromFile(imageFile);
+            compressUri = Uri.fromFile(imageFile);
 
             try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), compressUri);
                imageView.setImageBitmap(bitmap);
 
                 String name = imageFile.getName();
