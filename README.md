@@ -1,4 +1,4 @@
-# SilliCompressor
+# SiliCompressor
 A powerful image compression library for Android.
 
 
