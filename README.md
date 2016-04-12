@@ -2,6 +2,16 @@
 A powerful image compression library for Android.
 
 
+Usage
+--------
+
+
+Download
+--------
+#### Gradle
+
+##### Maven
+
 License
 --------
 Copyright 2016 Teyou Toure Nathan
