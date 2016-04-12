@@ -27,9 +27,8 @@ import java.io.IOException;
  */
 public class SiliCompressor {
 
-    private static Context mContext;
-
     static volatile SiliCompressor singleton = null;
+    private static Context mContext;
 
     public SiliCompressor(Context context){
         mContext = context;
@@ -218,6 +217,32 @@ public class SiliCompressor {
         }
     }
 
+    /**
+     * Fluent API for creating {@link SiliCompressor} instances.
+     */
+    public static class Builder {
+
+        private final Context context;
+
+        /**
+         * Start building a new {@link SiliCompressor} instance.
+         */
+        public Builder(Context context) {
+            if (context == null) {
+                throw new IllegalArgumentException("Context must not be null.");
+            }
+            this.context = context.getApplicationContext();
+        }
+
+        /**
+         * Create the {@link SiliCompressor} instance.
+         */
+        public SiliCompressor build() {
+            Context context = this.context;
+
+            return new SiliCompressor(context);
+        }
+    }
 
     class ImageCompressionAsyncTask extends AsyncTask<String, Void, String> {
         ProgressDialog mProgressDialog;
@@ -243,27 +268,6 @@ public class SiliCompressor {
         protected void onPostExecute(String s) {
 
 
-        }
-    }
-
-    /** Fluent API for creating {@link SiliCompressor} instances. */
-    public static class Builder {
-
-        private final Context context;
-
-        /** Start building a new {@link SiliCompressor} instance. */
-        public Builder(Context context) {
-            if (context == null) {
-                throw new IllegalArgumentException("Context must not be null.");
-            }
-            this.context = context.getApplicationContext();
-        }
-
-        /** Create the {@link SiliCompressor} instance. */
-        public SiliCompressor build() {
-            Context context = this.context;
-
-            return new SiliCompressor(context);
         }
     }
 
