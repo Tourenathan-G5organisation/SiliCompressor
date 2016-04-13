@@ -9,8 +9,20 @@ Usage
 Download
 --------
 #### Gradle
+```groovy
+compile 'com.iceteck.silicompressorr:silicompressor:1.0.0'
+```
 
 ##### Maven
+```xml
+<dependency>
+  <groupId>com.iceteck.silicompressorr</groupId>
+  <artifactId>silicompressor</artifactId>
+  <version>1.0.0</version>
+  <type>aar</type>
+</dependency>
+```
+Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
 License
 --------
@@ -27,3 +39,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+
+[snap]:  https://oss.sonatype.org/content/repositories/snapshots
