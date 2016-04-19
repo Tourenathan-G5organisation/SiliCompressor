@@ -32,7 +32,7 @@ Snapshots of the development version are available in [Sonatype's `snapshots` re
 
 License
 --------
-Copyright 2016 Teyou Toure Nathan
+Copyright 2016 [IceTeck][iceteck]
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -48,3 +48,4 @@ limitations under the License.
 
 
 [snap]:  https://oss.sonatype.org/content/repositories/snapshots
+[iceteck]:  http://iceteck.com/iceteck/index.php
