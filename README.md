@@ -4,6 +4,12 @@ A powerful image compression library for Android.
 
 Usage
 --------
+It's usually said that "A picture is worth a thousand words". Images adds flair and beauty to our android apps, but we usaully have problems with these images due to thier large size. With SiliCompressor you can now compress and use your images more smoothly.
+
+#### Compress an image return the file path of the new image
+```java
+String filePath = SiliCompressor.with(Context).compress(imageUriString);
+```
 
 
 Download
