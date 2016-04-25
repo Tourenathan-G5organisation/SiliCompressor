@@ -48,12 +48,26 @@ public class SiliCompressor {
     }
 
     /**
-     * Compresses the image at the specified Uri and and return the filepath of the compressed image.
+     * Compresses the image at the specified Uri String and and return the filepath of the compressed image.
      * @param imageUri
      * @return filepath
      */
     public String compress(String imageUri){
         return compressImage(imageUri);
+    }
+
+    /**
+     * Compresses the image at the specified Uri String and and return the bitmap data of the compressed image.
+     *
+     * @param imageUri
+     * @return Bitmap format of the new image file (compressed)
+     * @throws IOException
+     */
+    public Bitmap getCompressBitmap(String imageUri) throws IOException {
+        File imageFile = new File(imageUri);
+        Uri newImageUri = Uri.fromFile(imageFile);
+        Bitmap bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), newImageUri);
+        return bitmap;
     }
 
     // Actually does the compression of the Image
