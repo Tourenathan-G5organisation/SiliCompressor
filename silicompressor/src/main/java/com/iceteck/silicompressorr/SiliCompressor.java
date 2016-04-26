@@ -49,7 +49,7 @@ public class SiliCompressor {
 
     /**
      * Compresses the image at the specified Uri String and and return the filepath of the compressed image.
-     * @param imageUri
+     * @param imageUri imageUri Uri (String) of the source image you wish to compress
      * @return filepath
      */
     public String compress(String imageUri){
@@ -57,16 +57,53 @@ public class SiliCompressor {
     }
 
     /**
+     * Compresses the image at the specified Uri String and and return the filepath of the compressed image.
+     * @param imageUri imageUri Uri (String) of the source image you wish to compress
+     * @return filepath
+     */
+    public String compress(String imageUri, boolean deleteSourceImage){
+
+        String compressUri =  compressImage(imageUri);
+        if (deleteSourceImage)
+        {
+            File source = new File(imageUri);
+            source.delete();
+        }
+        return compressUri;
+    }
+
+
+    /**
      * Compresses the image at the specified Uri String and and return the bitmap data of the compressed image.
      *
-     * @param imageUri
+     * @param imageUri imageUri Uri (String) of the source image you wish to compress
      * @return Bitmap format of the new image file (compressed)
      * @throws IOException
      */
     public Bitmap getCompressBitmap(String imageUri) throws IOException {
-        File imageFile = new File(imageUri);
+        File imageFile = new File(compressImage(imageUri));
         Uri newImageUri = Uri.fromFile(imageFile);
         Bitmap bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), newImageUri);
+        return bitmap;
+    }
+
+    /**
+     * Compresses the image at the specified Uri String and and return the bitmap data of the compressed image.
+     * @param imageUri Uri (String) of the source image you wish to compress
+     * @param deleteSourceImage If True will delete the source file
+     * @return
+     * @throws IOException
+     */
+    public Bitmap getCompressBitmap(String imageUri, boolean deleteSourceImage) throws IOException {
+        File imageFile = new File(compressImage(imageUri));
+        Uri newImageUri = Uri.fromFile(imageFile);
+        Bitmap bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), newImageUri);
+
+        if (deleteSourceImage)
+        {
+           File source = new File(imageUri);
+            source.delete();
+        }
         return bitmap;
     }
 
