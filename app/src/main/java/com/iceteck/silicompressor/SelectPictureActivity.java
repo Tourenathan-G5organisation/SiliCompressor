@@ -1,20 +1,25 @@
 package com.iceteck.silicompressor;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.iceteck.silicompressorr.SiliCompressor;
 
@@ -28,6 +33,7 @@ public class SelectPictureActivity extends AppCompatActivity {
     public static final String LOG_TAG = SelectPictureActivity.class.getSimpleName();
 
     private static final int REQUEST_TAKE_CAMERA_PHOTO = 1;
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 1;
 
     String mCurrentPhotoPath;
     Uri capturedUri = null;
@@ -48,14 +54,47 @@ public class SelectPictureActivity extends AppCompatActivity {
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dispatchTakePictureIntent();
+                requestPermissions();
             }
         });
+    }
 
+    /**
+     * Request Permission for writing to External Storage in 6.0 and up
+     */
+    private void requestPermissions(){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
 
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_WRITE_STORAGE);
+        }
+        else{
+            dispatchTakePictureIntent();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_WRITE_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    dispatchTakePictureIntent();
+                }
+                else{
+                    Toast.makeText(this, "You need enable the permission for External Storage Write" +
+                            " to test out this library.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+            }
+            default:
+        }
     }
 
     private File createImageFile() throws IOException {
+
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
@@ -97,7 +136,6 @@ public class SelectPictureActivity extends AppCompatActivity {
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_CAMERA_PHOTO);
             }
         }
-
     }
 
 
@@ -126,7 +164,7 @@ public class SelectPictureActivity extends AppCompatActivity {
         Context mContext;
 
         public ImageCompressionAsyncTask(Context context){
-                mContext = context;
+            mContext = context;
         }
 
         @Override
@@ -143,7 +181,7 @@ public class SelectPictureActivity extends AppCompatActivity {
 
             try {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), compressUri);
-               imageView.setImageBitmap(bitmap);
+                imageView.setImageBitmap(bitmap);
 
                 String name = imageFile.getName();
                 float length = imageFile.length() / 1024f; // Size in KB
