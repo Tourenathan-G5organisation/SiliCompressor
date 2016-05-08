@@ -19,6 +19,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @author Toure
@@ -80,6 +82,43 @@ public class SiliCompressor {
     }
 
 
+    public String compress(int drawableID) throws IOException {
+
+        // Create a bitmap from this drawable
+        Bitmap bitmap = BitmapFactory.decodeResource(mContext.getApplicationContext().getResources(), drawableID);
+        if (null != bitmap){
+            // Create a file from the bitmap
+
+            // Create an image file name
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String imageFileName = "JPEG_" + timeStamp + "_";
+            File storageDir = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_PICTURES);
+            File image = File.createTempFile(
+                    imageFileName,  /* prefix */
+                    ".jpg",         /* suffix */
+                    storageDir      /* directory */
+            );
+            FileOutputStream out = new FileOutputStream(image);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+
+            // Compress the new file
+            Uri copyImageUri = Uri.fromFile(image);
+
+            String compressImagePath = compressImage(copyImageUri.toString());
+
+            // Delete the file create from the drawable Id
+            if (image.exists()) {
+                boolean isdeleted = image.delete();
+                Log.d(LOG_TAG, (isdeleted) ? "SourceImage File deleted" : "SourceImage File not deleted");
+            }
+
+            // return the path to the compress image
+            return compressImagePath;
+        }
+
+        return null;
+    }
     /**
      * Compresses the image at the specified Uri String and and return the bitmap data of the compressed image.
      *
@@ -108,7 +147,7 @@ public class SiliCompressor {
 
         if (deleteSourceImage)
         {
-           File source = new File(getRealPathFromURI(imageUri));
+            File source = new File(getRealPathFromURI(imageUri));
             if (source.exists()) {
                 boolean isdeleted = source.delete();
                 Log.d(LOG_TAG, (isdeleted) ? "SourceImage File deleted" : "SourceImage File not deleted");
@@ -266,6 +305,11 @@ public class SiliCompressor {
 
     }
 
+    /**
+     * Gets a valid path from the supply contentURI
+     * @param contentURI
+     * @return A validPath of the image
+     */
     private String getRealPathFromURI(String contentURI) {
         Uri contentUri = Uri.parse(contentURI);
         Cursor cursor = mContext.getContentResolver().query(contentUri, null, null, null, null);
