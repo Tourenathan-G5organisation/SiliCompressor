@@ -24,7 +24,6 @@ import java.util.Date;
 
 /**
  * @author Toure
- * @date 28/03/2016
  * Created by Toure on 28/03/2016.
  */
 public class SiliCompressor {
@@ -119,6 +118,8 @@ public class SiliCompressor {
 
         return null;
     }
+
+
     /**
      * Compresses the image at the specified Uri String and and return the bitmap data of the compressed image.
      *
@@ -137,7 +138,7 @@ public class SiliCompressor {
      * Compresses the image at the specified Uri String and and return the bitmap data of the compressed image.
      * @param imageUri Uri (String) of the source image you wish to compress
      * @param deleteSourceImage If True will delete the source file
-     * @return
+     * @return Compress image bitmap
      * @throws IOException
      */
     public Bitmap getCompressBitmap(String imageUri, boolean deleteSourceImage) throws IOException {
@@ -318,7 +319,9 @@ public class SiliCompressor {
         } else {
             cursor.moveToFirst();
             int index = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-            return cursor.getString(index);
+            String str = cursor.getString(index);
+            cursor.close();
+            return str;
         }
     }
 
@@ -329,6 +332,7 @@ public class SiliCompressor {
 
         private final Context context;
 
+
         /**
          * Start building a new {@link SiliCompressor} instance.
          */
@@ -338,6 +342,7 @@ public class SiliCompressor {
             }
             this.context = context.getApplicationContext();
         }
+
 
         /**
          * Create the {@link SiliCompressor} instance.
