@@ -27,6 +27,8 @@ import java.io.IOException;
  */
 public class SiliCompressor {
 
+    private static final String LOG_TAG = SiliCompressor.class.getSimpleName();
+
     static volatile SiliCompressor singleton = null;
     private static Context mContext;
 
@@ -64,11 +66,16 @@ public class SiliCompressor {
     public String compress(String imageUri, boolean deleteSourceImage){
 
         String compressUri =  compressImage(imageUri);
+
         if (deleteSourceImage)
         {
-            File source = new File(imageUri);
-            source.delete();
+            File source = new File(getRealPathFromURI(imageUri));
+            if (source.exists()) {
+                boolean isdeleted = source.delete();
+                Log.d(LOG_TAG, (isdeleted) ? "SourceImage File deleted" : "SourceImage File not deleted");
+            }
         }
+
         return compressUri;
     }
 
@@ -101,8 +108,11 @@ public class SiliCompressor {
 
         if (deleteSourceImage)
         {
-           File source = new File(imageUri);
-            source.delete();
+           File source = new File(getRealPathFromURI(imageUri));
+            if (source.exists()) {
+                boolean isdeleted = source.delete();
+                Log.d(LOG_TAG, (isdeleted) ? "SourceImage File deleted" : "SourceImage File not deleted");
+            }
         }
         return bitmap;
     }

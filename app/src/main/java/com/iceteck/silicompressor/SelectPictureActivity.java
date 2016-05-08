@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class SelectPictureActivity extends AppCompatActivity {
 
@@ -169,13 +170,39 @@ public class SelectPictureActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(String... params) {
+
             String filePath = SiliCompressor.with(mContext).compress(params[0]);
             return filePath;
 
+
+            /*
+            Bitmap compressBitMap = null;
+            try {
+                compressBitMap = SiliCompressor.with(mContext).getCompressBitmap(params[0], true);
+                return compressBitMap;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return compressBitMap;
+
+            */
         }
 
         @Override
         protected void onPostExecute(String s) {
+            /*
+            if (null != s){
+                imageView.setImageBitmap(s);
+                int compressHieght = s.getHeight();
+                int compressWidth = s.getWidth();
+                float length = s.getByteCount() / 1024f; // Size in KB;
+
+                String text = String.format("Name: %s\nSize: %fKB\nWidth: %d\nHeight: %d", "ff", length, compressWidth, compressHieght);
+                picDescription.setVisibility(View.VISIBLE);
+                picDescription.setText(text);
+            }
+            */
+
             File imageFile = new File(s);
             compressUri = Uri.fromFile(imageFile);
 
@@ -187,13 +214,14 @@ public class SelectPictureActivity extends AppCompatActivity {
                 float length = imageFile.length() / 1024f; // Size in KB
                 int compressWidth = bitmap.getWidth();
                 int compressHieght = bitmap.getHeight();
-                String text = String.format("Name: %s\nSize: %fKB\nWidth: %d\nHeight: %d", name, length, compressWidth, compressHieght);
+                String text = String.format(Locale.US, "Name: %s\nSize: %fKB\nWidth: %d\nHeight: %d", name, length, compressWidth, compressHieght);
                 picDescription.setVisibility(View.VISIBLE);
                 picDescription.setText(text);
             }
             catch (IOException e) {
                 e.printStackTrace();
             }
+
         }
     }
 
