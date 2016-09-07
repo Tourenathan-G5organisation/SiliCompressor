@@ -30,12 +30,12 @@ String filePath = SiliCompressor.with(Context).compress(R.drawable.icon);
 
 #### Compress an image and return the bitmap data of the new image
 ```java
-String filePath = SiliCompressor.with(Context).getCompressBitmap(imageUriString);
+Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imageUriString);
 ```
 
 #### Compress an image and return the bitmap data of the new image while deleting the source image
 ```java
-String filePath = SiliCompressor.with(Context).getCompressBitmap(imageUriString, true);
+Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imageUriString, true);
 ```
 
 
