@@ -21,9 +21,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 /**
- * @author Toure
+ * @author Toure, Akah L
+ * @version 1.1.1
  * Created by Toure on 28/03/2016.
  */
 public class SiliCompressor {
@@ -56,7 +58,7 @@ public class SiliCompressor {
      * @return filepath
      */
     public String compress(String imageUri){
-        return compressImage(imageUri);
+        return compressImage(imageUri, new File(Environment.getExternalStorageDirectory(), "Silicompressor/images"));
     }
 
     /**
@@ -66,7 +68,7 @@ public class SiliCompressor {
      */
     public String compress(String imageUri, boolean deleteSourceImage){
 
-        String compressUri =  compressImage(imageUri);
+        String compressUri =  compressImage(imageUri, new File(Environment.getExternalStorageDirectory(), "Silicompressor/images"));
 
         if (deleteSourceImage)
         {
@@ -104,7 +106,7 @@ public class SiliCompressor {
             // Compress the new file
             Uri copyImageUri = Uri.fromFile(image);
 
-            String compressImagePath = compressImage(copyImageUri.toString());
+            String compressImagePath = compressImage(copyImageUri.toString(),new File(Environment.getExternalStorageDirectory(), "Silicompressor/images"));
 
             // Delete the file create from the drawable Id
             if (image.exists()) {
@@ -128,7 +130,7 @@ public class SiliCompressor {
      * @throws IOException
      */
     public Bitmap getCompressBitmap(String imageUri) throws IOException {
-        File imageFile = new File(compressImage(imageUri));
+        File imageFile = new File(compressImage(imageUri,new File(Environment.getExternalStorageDirectory(), "Silicompressor/images")));
         Uri newImageUri = Uri.fromFile(imageFile);
         Bitmap bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), newImageUri);
         return bitmap;
@@ -142,7 +144,7 @@ public class SiliCompressor {
      * @throws IOException
      */
     public Bitmap getCompressBitmap(String imageUri, boolean deleteSourceImage) throws IOException {
-        File imageFile = new File(compressImage(imageUri));
+        File imageFile = new File(compressImage(imageUri,new File(Environment.getExternalStorageDirectory(), "Silicompressor/images")));
         Uri newImageUri = Uri.fromFile(imageFile);
         Bitmap bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), newImageUri);
 
@@ -157,8 +159,13 @@ public class SiliCompressor {
         return bitmap;
     }
 
-    // Actually does the compression of the Image
-    private String compressImage(String imageUri) {
+    /**
+     * Do the actual compression of this image
+     * @param imageUri source image file to compress
+     * @param destDirectory destination directory to place image in
+     * @return uri string of the compressed image
+     */
+    private String compressImage(String imageUri, File destDirectory) {
 
         String filePath = getRealPathFromURI(imageUri);
         Bitmap scaledBitmap = null;
@@ -262,12 +269,12 @@ public class SiliCompressor {
         }
 
         FileOutputStream out = null;
-        String filename = getFilename();
+        String filename = getFilename(imageUri, destDirectory);
         try {
             out = new FileOutputStream(filename);
 
 //          write the compressed bitmap at the destination specified by filename.
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+            scaledBitmap.compress(Bitmap.CompressFormat.PNG, 80, out);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -296,13 +303,17 @@ public class SiliCompressor {
         return inSampleSize;
     }
 
-    private String getFilename() {
-        File file = new File(Environment.getExternalStorageDirectory().getPath(), "SiliCompressor/Images");
+    private String getFilename(String filename, File file) {
         if (!file.exists()) {
             file.mkdirs();
         }
-        String uriSting = (file.getAbsolutePath() + "/" + System.currentTimeMillis() + ".jpg");
-        return uriSting;
+        String ext = ".jpg";
+        //get extension
+        /*if (Pattern.matches("^[.][p][n][g]", filename)){
+            ext = ".png";
+        }*/
+
+        return (file.getAbsolutePath() + "/IMG_" + SimpleDateFormat.getInstance().format(new Date()) + ext);
 
     }
 
@@ -370,7 +381,7 @@ public class SiliCompressor {
         @Override
         protected String doInBackground(String... params) {
 
-            String filePath = compressImage(params[0]);
+            String filePath = compressImage(params[0], new File(params[1]));
             return filePath;
         }
 
