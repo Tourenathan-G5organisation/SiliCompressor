@@ -313,7 +313,7 @@ public class SiliCompressor {
             ext = ".png";
         }*/
 
-        return (file.getAbsolutePath() + "/IMG_" + SimpleDateFormat.getInstance().format(new Date()) + ext);
+        return (file.getAbsolutePath() + "/IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ext);
 
     }
 
