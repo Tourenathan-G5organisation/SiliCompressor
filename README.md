@@ -6,6 +6,10 @@ Description
 --------
 It's usually said that "A picture is worth a thousand words". Images adds flair and beauty to our android apps, but we usaully have problems with these images due to thier large size. With SiliCompressor you can now compress and use your images more smoothly.
 
+Credit
+--------
+This image compressor project is inspired from [Void Canvas] blog from which the core part of the compressor was done.
+
 Usage
 --------
 To effectively use this library, you must make sure you have added the following permission to your project.
@@ -30,12 +34,12 @@ String filePath = SiliCompressor.with(Context).compress(R.drawable.icon);
 
 #### Compress an image and return the bitmap data of the new image
 ```java
-String filePath = SiliCompressor.with(Context).getCompressBitmap(imageUriString);
+Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imageUriString);
 ```
 
 #### Compress an image and return the bitmap data of the new image while deleting the source image
 ```java
-String filePath = SiliCompressor.with(Context).getCompressBitmap(imageUriString, true);
+Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imageUriString, true);
 ```
 
 
@@ -76,3 +80,4 @@ limitations under the License.
 
 [snap]:  https://oss.sonatype.org/content/repositories/snapshots
 [iceteck]:  http://iceteck.com/iceteck/index.php
+[Void Canvas]: http://voidcanvas.com/whatsapp-like-image-compression-in-android/

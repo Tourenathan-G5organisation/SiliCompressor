@@ -158,13 +158,12 @@ public class SelectPictureActivity extends AppCompatActivity {
 
             try {
                 if ((null == data) || (data.getData() == null)){
-                    new ImageCompressionAsyncTask(this).execute(capturedUri.toString());
+                    new ImageCompressionAsyncTask(this).execute(capturedUri.toString(),
+                            Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getPackageName()+"/media/images");
                 }
                 else {
-                    new ImageCompressionAsyncTask(this).execute(data.toString());
+                    new ImageCompressionAsyncTask(this).execute(data.toString(),);
                 }
-
-
 
             } catch (Exception e) {
                 e.printStackTrace();
