@@ -114,6 +114,10 @@ public class SelectPictureActivity extends AppCompatActivity {
     }
 
     private void dispatchTakePictureIntent() {
+        /*Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");*/
+
+
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         //takePictureIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION, ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         // Ensure that there's a camera activity to handle the intent
@@ -135,6 +139,10 @@ public class SelectPictureActivity extends AppCompatActivity {
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, capturedUri);
 
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_CAMERA_PHOTO);
+                /*String title = getString(R.string.choose_a_pic);
+                Intent chooserIntent = Intent.createChooser(intent, title);
+                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[] { takePictureIntent });
+                startActivityForResult(chooserIntent, REQUEST_TAKE_CAMERA_PHOTO);*/
             }
         }
     }
@@ -149,8 +157,14 @@ public class SelectPictureActivity extends AppCompatActivity {
         if (requestCode == REQUEST_TAKE_CAMERA_PHOTO && resultCode == Activity.RESULT_OK) {
 
             try {
+                if ((null == data) || (data.getData() == null)){
+                    new ImageCompressionAsyncTask(this).execute(capturedUri.toString());
+                }
+                else {
+                    new ImageCompressionAsyncTask(this).execute(data.toString());
+                }
 
-                new ImageCompressionAsyncTask(this).execute(capturedUri.toString());
+
 
             } catch (Exception e) {
                 e.printStackTrace();
