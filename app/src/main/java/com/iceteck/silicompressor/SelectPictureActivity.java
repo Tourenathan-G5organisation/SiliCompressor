@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.LinkedTransferQueue;
 
 public class SelectPictureActivity extends AppCompatActivity {
 
@@ -35,12 +36,16 @@ public class SelectPictureActivity extends AppCompatActivity {
 
     private static final int REQUEST_TAKE_CAMERA_PHOTO = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 1;
+    private static final int RESQUEST_TAKE_VIDEO = 200;
+    private static final int TYPE_IMAGE = 1;
+    private static final int TYPE_VIDEO = 2;
 
     String mCurrentPhotoPath;
     Uri capturedUri = null;
     Uri compressUri = null;
     ImageView imageView;
     TextView picDescription;
+    private ImageView videoImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,12 +55,28 @@ public class SelectPictureActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         imageView = (ImageView) findViewById(R.id.photo);
+        videoImageView = (ImageView)findViewById(R.id.videoImageView);
         picDescription = (TextView) findViewById(R.id.pic_description);
 
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 requestPermissions();
+            }
+        });
+
+        videoImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent videoCapture = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+                videoCapture.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 10);
+                videoCapture.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
+                try {
+                    videoCapture.putExtra(MediaStore.EXTRA_OUTPUT, createMediaFile(TYPE_VIDEO).getPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                startActivityForResult(videoCapture, RESQUEST_TAKE_VIDEO);
             }
         });
     }
@@ -94,23 +115,23 @@ public class SelectPictureActivity extends AppCompatActivity {
         }
     }
 
-    private File createImageFile() throws IOException {
+    private File createMediaFile(int type) throws IOException {
 
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
+        String fileName = type == 1 ? "JPEG_" + timeStamp + "_" : "VID_" + timeStamp + "_";
         File storageDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
+                type == 1 ? Environment.DIRECTORY_PICTURES : Environment.DIRECTORY_MOVIES);
+        File file = File.createTempFile(
+                fileName,  /* prefix */
+                type == 1 ? ".jpg" : ".mp4",         /* suffix */
                 storageDir      /* directory */
         );
 
         // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath = "file:" + image.getAbsolutePath();
+        mCurrentPhotoPath = "file:" + file.getAbsolutePath();
         Log.d(LOG_TAG, "mCurrentPhotoPath: " + mCurrentPhotoPath);
-        return image;
+        return file;
     }
 
     private void dispatchTakePictureIntent() {
@@ -121,7 +142,7 @@ public class SelectPictureActivity extends AppCompatActivity {
             // Create the File where the photo should go
             File photoFile = null;
             try {
-                photoFile = createImageFile();
+                photoFile = createMediaFile(TYPE_IMAGE);
             } catch (IOException ex) {
                 // Error occurred while creating the File
 
@@ -157,6 +178,15 @@ public class SelectPictureActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
+        }else if (requestCode == RESQUEST_TAKE_VIDEO && resultCode == RESULT_OK){
+            if (data.getData() != null) {
+                //create destination directory
+                File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + getPackageName() + "/media/videos");
+                if (f.mkdirs() || f.isDirectory())
+                    //compress and output new video specs
+                    SiliCompressor.with(this).compressVideo(data.getData().toString(),
+                            f.getPath());
+            }
         }
 
     }
@@ -172,7 +202,7 @@ public class SelectPictureActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... params) {
 
-            String filePath = SiliCompressor.with(mContext).compress(params[0]);
+            String filePath = SiliCompressor.with(mContext).compress(params[0], new File(params[1]));
             return filePath;
 
 
