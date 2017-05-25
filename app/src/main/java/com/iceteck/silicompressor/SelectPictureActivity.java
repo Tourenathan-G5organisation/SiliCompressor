@@ -35,12 +35,17 @@ public class SelectPictureActivity extends AppCompatActivity {
 
     private static final int REQUEST_TAKE_CAMERA_PHOTO = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 1;
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE_VID = 2;
+    private static final int RESQUEST_TAKE_VIDEO = 200;
+    private static final int TYPE_IMAGE = 1;
+    private static final int TYPE_VIDEO = 2;
 
     String mCurrentPhotoPath;
     Uri capturedUri = null;
     Uri compressUri = null;
     ImageView imageView;
     TextView picDescription;
+    private ImageView videoImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,12 +55,20 @@ public class SelectPictureActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         imageView = (ImageView) findViewById(R.id.photo);
+        videoImageView = (ImageView)findViewById(R.id.videoImageView);
         picDescription = (TextView) findViewById(R.id.pic_description);
 
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                requestPermissions();
+                requestPermissions(TYPE_IMAGE);
+            }
+        });
+
+        videoImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+               requestPermissions(TYPE_VIDEO);
             }
         });
     }
@@ -63,18 +76,35 @@ public class SelectPictureActivity extends AppCompatActivity {
     /**
      * Request Permission for writing to External Storage in 6.0 and up
      */
-    private void requestPermissions(){
+    private void requestPermissions(int mediaType){
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
+            if (mediaType == TYPE_IMAGE){
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_WRITE_STORAGE);
+            }
+            else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_WRITE_STORAGE_VID);
+            }
 
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_REQUEST_WRITE_STORAGE);
         }
         else{
-            dispatchTakePictureIntent();
+            if (mediaType == TYPE_IMAGE){
+                // Want to compress an image
+                dispatchTakePictureIntent();
+            }
+            else if (mediaType == TYPE_VIDEO){
+                // Want to compress a video
+                dispatchTakeVideoIntent();
+            }
+
         }
     }
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
@@ -89,28 +119,41 @@ public class SelectPictureActivity extends AppCompatActivity {
                             " to test out this library.", Toast.LENGTH_LONG).show();
                     return;
                 }
+                break;
+            }
+            case MY_PERMISSIONS_REQUEST_WRITE_STORAGE_VID: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    dispatchTakeVideoIntent();
+                }
+                else{
+                    Toast.makeText(this, "You need enable the permission for External Storage Write" +
+                            " to test out this library.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                break;
             }
             default:
         }
     }
 
-    private File createImageFile() throws IOException {
+    private File createMediaFile(int type) throws IOException {
 
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
+        String fileName = type == 1 ? "JPEG_" + timeStamp + "_" : "VID_" + timeStamp + "_";
         File storageDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
+                type == 1 ? Environment.DIRECTORY_PICTURES : Environment.DIRECTORY_MOVIES);
+        File file = File.createTempFile(
+                fileName,  /* prefix */
+                type == 1 ? ".jpg" : ".mp4",         /* suffix */
                 storageDir      /* directory */
         );
 
         // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath = "file:" + image.getAbsolutePath();
+        mCurrentPhotoPath = "file:" + file.getAbsolutePath();
         Log.d(LOG_TAG, "mCurrentPhotoPath: " + mCurrentPhotoPath);
-        return image;
+        return file;
     }
 
     private void dispatchTakePictureIntent() {
@@ -125,7 +168,7 @@ public class SelectPictureActivity extends AppCompatActivity {
             // Create the File where the photo should go
             File photoFile = null;
             try {
-                photoFile = createImageFile();
+                photoFile = createMediaFile(TYPE_IMAGE);
             } catch (IOException ex) {
                 // Error occurred while creating the File
 
@@ -147,6 +190,26 @@ public class SelectPictureActivity extends AppCompatActivity {
         }
     }
 
+
+    private void dispatchTakeVideoIntent() {
+        Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        if (takeVideoIntent.resolveActivity(getPackageManager()) != null) {
+            try {
+
+                takeVideoIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 10);
+                takeVideoIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
+                capturedUri = Uri.fromFile(createMediaFile(TYPE_VIDEO));
+                takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, capturedUri);
+                Log.d(LOG_TAG, "VideoUri: "  + capturedUri.toString());
+                startActivityForResult(takeVideoIntent, RESQUEST_TAKE_VIDEO);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+
+    }
 
     // Method which will process the captured image
     @Override
@@ -170,6 +233,15 @@ public class SelectPictureActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
+        }else if (requestCode == RESQUEST_TAKE_VIDEO && resultCode == RESULT_OK){
+            if (data.getData() != null) {
+                //create destination directory
+                File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + getPackageName() + "/media/videos");
+                if (f.mkdirs() || f.isDirectory())
+                    //compress and output new video specs
+                    SiliCompressor.with(this).compressVideo(data.getData().toString(),
+                            f.getPath());
+            }
         }
 
     }
@@ -185,7 +257,7 @@ public class SelectPictureActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... params) {
 
-            String filePath = SiliCompressor.with(mContext).compress(params[0]);
+            String filePath = SiliCompressor.with(mContext).compress(params[0], new File(params[1]));
             return filePath;
 
 

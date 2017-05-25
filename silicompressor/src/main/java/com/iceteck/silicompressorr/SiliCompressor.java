@@ -17,12 +17,16 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import com.iceteck.silicompressorr.videocompression.MediaController;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * @author Toure, Akah L
@@ -32,6 +36,7 @@ import java.util.Date;
 public class SiliCompressor {
 
     private static final String LOG_TAG = SiliCompressor.class.getSimpleName();
+    public static String videoCompressionPath ;
 
     static volatile SiliCompressor singleton = null;
     private static Context mContext;
@@ -58,8 +63,8 @@ public class SiliCompressor {
      * @param imageUri imageUri Uri (String) of the source image you wish to compress
      * @return filepath
      */
-    public String compress(String imageUri){
-        return compressImage(imageUri, new File(Environment.getExternalStorageDirectory(), "Silicompressor/images"));
+    public String compress(String imageUri, File destination){
+        return compressImage(imageUri, destination);
     }
 
     /**
@@ -67,9 +72,9 @@ public class SiliCompressor {
      * @param imageUri imageUri Uri (String) of the source image you wish to compress
      * @return filepath
      */
-    public String compress(String imageUri, boolean deleteSourceImage){
+    public String compress(String imageUri, File destination, boolean deleteSourceImage){
 
-        String compressUri =  compressImage(imageUri, new File(Environment.getExternalStorageDirectory(), "Silicompressor/images"));
+        String compressUri =  compressImage(imageUri, destination);
 
         if (deleteSourceImage)
         {
@@ -92,7 +97,7 @@ public class SiliCompressor {
             // Create a file from the bitmap
 
             // Create an image file name
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ENGLISH).format(new Date());
             String imageFileName = "JPEG_" + timeStamp + "_";
             File storageDir = Environment.getExternalStoragePublicDirectory(
                     Environment.DIRECTORY_PICTURES);
@@ -285,6 +290,19 @@ public class SiliCompressor {
 
     }
 
+    /**
+     * Perform background video compression. Make sure the videofileUri and destinationUri are valid
+     * resources because this method does not account for missing directories hence your converted file
+     * could be in an unknown location
+     * @param videoFileUri source uri for the video file
+     * @param destinationUri destination directory where converted file should be saved
+     * @return
+     */
+    public String compressVideo(String videoFileUri, String destinationUri){
+        new VideoCompress().execute(videoFileUri, destinationUri);
+        return SiliCompressor.videoCompressionPath;
+    }
+
     private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
         final int height = options.outHeight;
         final int width = options.outWidth;
@@ -422,4 +440,34 @@ public class SiliCompressor {
         }
     }
 
+    class VideoCompress extends AsyncTask<String, String, String>{
+
+        @Override
+        protected String doInBackground(String... paths) {
+            try {
+                boolean isconverted = MediaController.getInstance().convertVideo(Util.getFilePath(mContext, Uri.parse(paths[0])), new File(paths[1]));
+                if (isconverted){
+                    publishProgress("Video Conversion Complete");
+                }else{
+                    publishProgress("Video conversion in progress");
+                }
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+            return MediaController.cachedFile.getPath();
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+            Log.i("Silicompressor", "Progress: "+values[0]);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            videoCompressionPath = s;
+            Log.i("Silicompressor", "Path: "+s);
+        }
+    }
 }
