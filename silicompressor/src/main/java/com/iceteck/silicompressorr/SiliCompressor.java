@@ -296,11 +296,18 @@ public class SiliCompressor {
      * could be in an unknown location
      * @param videoFileUri source uri for the video file
      * @param destinationUri destination directory where converted file should be saved
-     * @return
+     * @return The Path of the compressed video file
      */
-    public String compressVideo(String videoFileUri, String destinationUri){
-        new VideoCompress().execute(videoFileUri, destinationUri);
-        return SiliCompressor.videoCompressionPath;
+    public String compressVideo(String videoFileUri, String destinationUri) throws URISyntaxException {
+        boolean isconverted = MediaController.getInstance().convertVideo(Util.getFilePath(mContext, Uri.parse(videoFileUri)), new File(destinationUri));
+        if (isconverted){
+            Log.v(LOG_TAG, "Video Conversion Complete");
+        }else{
+            Log.v(LOG_TAG, "Video conversion in progress");
+        }
+
+        return MediaController.cachedFile.getPath();
+
     }
 
     private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
@@ -353,12 +360,12 @@ public class SiliCompressor {
             cursor.close();
             return str;
         }
-       // return  FileUtils.getPath(mContext, contentUri);
+        // return  FileUtils.getPath(mContext, contentUri);
 
         // return  getRealPathFromURI_API19(mContext, contentUri);
 
 
-}
+    }
     @SuppressLint("NewApi")
     public static String getRealPathFromURI_API19(Context context, Uri uri){
         String filePath = "";

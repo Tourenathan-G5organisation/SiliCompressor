@@ -25,6 +25,7 @@ import com.iceteck.silicompressorr.SiliCompressor;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -239,8 +240,8 @@ public class SelectPictureActivity extends AppCompatActivity {
                 File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + getPackageName() + "/media/videos");
                 if (f.mkdirs() || f.isDirectory())
                     //compress and output new video specs
-                    SiliCompressor.with(this).compressVideo(data.getData().toString(),
-                            f.getPath());
+                new VideoCompressAsyncTask(this).execute(data.getData().toString(), f.getPath());
+
             }
         }
 
@@ -308,6 +309,50 @@ public class SelectPictureActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
+        }
+    }
+
+
+    class VideoCompressAsyncTask extends AsyncTask<String, String, String>{
+
+        Context mContext;
+
+        public VideoCompressAsyncTask(Context context){
+            mContext = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... paths) {
+            String filePath = null;
+            try {
+
+              filePath = SiliCompressor.with(mContext).compressVideo(paths[0], paths[1]);
+
+               /* boolean isconverted = MediaController.getInstance().convertVideo(Util.getFilePath(mContext, Uri.parse(paths[0])), new File(paths[1]));
+                if (isconverted){
+                    publishProgress("Video Conversion Complete");
+                }else{
+                    publishProgress("Video conversion in progress");
+                }*/
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+            return  filePath;
+
+        }
+
+
+
+        @Override
+        protected void onPostExecute(String compressedFilePath) {
+            super.onPostExecute(compressedFilePath);
+
+            Log.i("Silicompressor", "Path: "+compressedFilePath);
         }
     }
 
