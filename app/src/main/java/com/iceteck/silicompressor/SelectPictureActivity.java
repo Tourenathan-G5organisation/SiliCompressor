@@ -30,6 +30,7 @@ import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.LinkedTransferQueue;
 
 public class SelectPictureActivity extends AppCompatActivity {
 
@@ -38,6 +39,7 @@ public class SelectPictureActivity extends AppCompatActivity {
     private static final int REQUEST_TAKE_CAMERA_PHOTO = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE_VID = 2;
+
     private static final int RESQUEST_TAKE_VIDEO = 200;
     private static final int TYPE_IMAGE = 1;
     private static final int TYPE_VIDEO = 2;
@@ -48,7 +50,9 @@ public class SelectPictureActivity extends AppCompatActivity {
     ImageView imageView;
     TextView picDescription;
     private ImageView videoImageView;
+
     LinearLayout compressionMsg;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +77,21 @@ public class SelectPictureActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                requestPermissions(TYPE_VIDEO);
+            }
+        });
+
+        videoImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent videoCapture = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+                videoCapture.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 10);
+                videoCapture.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
+                try {
+                    videoCapture.putExtra(MediaStore.EXTRA_OUTPUT, createMediaFile(TYPE_VIDEO).getPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                startActivityForResult(videoCapture, RESQUEST_TAKE_VIDEO);
             }
         });
     }
@@ -243,7 +262,9 @@ public class SelectPictureActivity extends AppCompatActivity {
                 File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + getPackageName() + "/media/videos");
                 if (f.mkdirs() || f.isDirectory())
                     //compress and output new video specs
+
                 new VideoCompressAsyncTask(this).execute(data.getData().toString(), f.getPath());
+
 
             }
         }
