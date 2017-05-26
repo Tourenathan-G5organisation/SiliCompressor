@@ -11,8 +11,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 2
-        versionName "1.1"
+        versionCode 3
+        versionName "2.0"
     }
     buildTypes {
         release {
@@ -41,7 +41,7 @@ ext {
     siteUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor'
     gitUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor.git'
 
-    libraryVersion = '1.1.0'
+    libraryVersion = '2.0'
 
     developerId = 'tourenathan'
     developerName = 'TEYOU TOURE NATHAN'

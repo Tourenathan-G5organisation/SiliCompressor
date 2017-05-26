@@ -26,7 +26,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-
 /**
  * @author Toure, Akah L
  * @version 1.1.1
@@ -306,7 +305,6 @@ public class SiliCompressor {
         }
 
         return MediaController.cachedFile.getPath();
-
 
     }
 
