@@ -1,7 +1,6 @@
 package com.iceteck.silicompressorr;
 
 import android.annotation.SuppressLint;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -11,7 +10,6 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.media.ExifInterface;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -420,61 +418,4 @@ public class SiliCompressor {
         }
     }
 
-    class ImageCompressionAsyncTask extends AsyncTask<String, Void, String> {
-        ProgressDialog mProgressDialog;
-
-        public ImageCompressionAsyncTask(Context context) {
-
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            String filePath = compressImage(params[0], new File(params[1]));
-            return filePath;
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-
-
-        }
-    }
-
-    class VideoCompress extends AsyncTask<String, String, String>{
-
-        @Override
-        protected String doInBackground(String... paths) {
-            try {
-                boolean isconverted = MediaController.getInstance().convertVideo(Util.getFilePath(mContext, Uri.parse(paths[0])), new File(paths[1]));
-                if (isconverted){
-                    publishProgress("Video Conversion Complete");
-                }else{
-                    publishProgress("Video conversion in progress");
-                }
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-            return MediaController.cachedFile.getPath();
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            Log.i("Silicompressor", "Progress: "+values[0]);
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            videoCompressionPath = s;
-            Log.i("Silicompressor", "Path: "+s);
-        }
-    }
 }

@@ -18,6 +18,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,6 +48,7 @@ public class SelectPictureActivity extends AppCompatActivity {
     ImageView imageView;
     TextView picDescription;
     private ImageView videoImageView;
+    LinearLayout compressionMsg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +60,7 @@ public class SelectPictureActivity extends AppCompatActivity {
         imageView = (ImageView) findViewById(R.id.photo);
         videoImageView = (ImageView)findViewById(R.id.videoImageView);
         picDescription = (TextView) findViewById(R.id.pic_description);
+        compressionMsg = (LinearLayout) findViewById(R.id.compressionMsg);
 
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -324,6 +327,9 @@ public class SelectPictureActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            imageView.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_photo_camera_white_48px));
+            compressionMsg.setVisibility(View.VISIBLE);
+            picDescription.setVisibility(View.GONE);
         }
 
         @Override
@@ -333,12 +339,6 @@ public class SelectPictureActivity extends AppCompatActivity {
 
               filePath = SiliCompressor.with(mContext).compressVideo(paths[0], paths[1]);
 
-               /* boolean isconverted = MediaController.getInstance().convertVideo(Util.getFilePath(mContext, Uri.parse(paths[0])), new File(paths[1]));
-                if (isconverted){
-                    publishProgress("Video Conversion Complete");
-                }else{
-                    publishProgress("Video conversion in progress");
-                }*/
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             }
@@ -347,11 +347,20 @@ public class SelectPictureActivity extends AppCompatActivity {
         }
 
 
-
         @Override
         protected void onPostExecute(String compressedFilePath) {
             super.onPostExecute(compressedFilePath);
-
+            File imageFile = new File(compressedFilePath);
+            float length = imageFile.length() / 1024f; // Size in KB
+            String value;
+            if(length >= 1024)
+                value = length/1024f+" MB";
+            else
+               value = length+" KB";
+            String text = String.format(Locale.US, "%s\nName: %s\nSize: %s", getString(R.string.video_compression_complete), imageFile.getName(), value);
+            compressionMsg.setVisibility(View.GONE);
+            picDescription.setVisibility(View.VISIBLE);
+            picDescription.setText(text);
             Log.i("Silicompressor", "Path: "+compressedFilePath);
         }
     }
