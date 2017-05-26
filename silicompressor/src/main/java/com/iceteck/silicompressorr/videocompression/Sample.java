@@ -6,7 +6,9 @@
  * Copyright Nikolai Kudashov, 2013-2014.
  */
 
-package com.iceteck.silicompressorr;
+
+package com.iceteck.silicompressorr.videocompression;
+
 
 public class Sample {
     private long offset = 0;

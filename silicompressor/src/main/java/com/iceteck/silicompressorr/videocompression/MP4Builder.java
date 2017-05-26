@@ -37,9 +37,6 @@ import com.coremedia.iso.boxes.TrackBox;
 import com.coremedia.iso.boxes.TrackHeaderBox;
 import com.googlecode.mp4parser.DataSource;
 import com.googlecode.mp4parser.util.Matrix;
-import com.iceteck.silicompressorr.Sample;
-import com.iceteck.silicompressorr.videocompression.Mp4Movie;
-import com.iceteck.silicompressorr.videocompression.Track;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

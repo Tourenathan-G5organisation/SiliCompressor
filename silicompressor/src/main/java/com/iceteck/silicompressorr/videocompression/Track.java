@@ -23,7 +23,6 @@ import com.googlecode.mp4parser.boxes.mp4.objectdescriptors.AudioSpecificConfig;
 import com.googlecode.mp4parser.boxes.mp4.objectdescriptors.DecoderConfigDescriptor;
 import com.googlecode.mp4parser.boxes.mp4.objectdescriptors.ESDescriptor;
 import com.googlecode.mp4parser.boxes.mp4.objectdescriptors.SLConfigDescriptor;
-import com.iceteck.silicompressorr.Sample;
 import com.mp4parser.iso14496.part15.AvcConfigurationBox;
 
 import java.nio.ByteBuffer;

@@ -17,7 +17,6 @@
 package com.iceteck.silicompressorr.videocompression;
 
 import android.annotation.TargetApi;
-
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;
 import android.opengl.EGLContext;

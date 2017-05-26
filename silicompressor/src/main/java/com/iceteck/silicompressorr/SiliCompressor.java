@@ -1,6 +1,6 @@
 package com.iceteck.silicompressorr;
 
-import android.app.ProgressDialog;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -10,8 +10,8 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.media.ExifInterface;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Environment;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 
@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
+
 
 /**
  * @author Toure, Akah L
@@ -94,7 +96,7 @@ public class SiliCompressor {
             // Create a file from the bitmap
 
             // Create an image file name
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ENGLISH).format(new Date());
             String imageFileName = "JPEG_" + timeStamp + "_";
             File storageDir = Environment.getExternalStoragePublicDirectory(
                     Environment.DIRECTORY_PICTURES);
@@ -293,11 +295,19 @@ public class SiliCompressor {
      * could be in an unknown location
      * @param videoFileUri source uri for the video file
      * @param destinationUri destination directory where converted file should be saved
-     * @return
+     * @return The Path of the compressed video file
      */
-    public String compressVideo(String videoFileUri, String destinationUri){
-        new VideoCompress().execute(videoFileUri, destinationUri);
-        return SiliCompressor.videoCompressionPath;
+    public String compressVideo(String videoFileUri, String destinationUri) throws URISyntaxException {
+        boolean isconverted = MediaController.getInstance().convertVideo(Util.getFilePath(mContext, Uri.parse(videoFileUri)), new File(destinationUri));
+        if (isconverted){
+            Log.v(LOG_TAG, "Video Conversion Complete");
+        }else{
+            Log.v(LOG_TAG, "Video conversion in progress");
+        }
+
+        return MediaController.cachedFile.getPath();
+
+
     }
 
     private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
@@ -350,6 +360,35 @@ public class SiliCompressor {
             cursor.close();
             return str;
         }
+        // return  FileUtils.getPath(mContext, contentUri);
+
+        // return  getRealPathFromURI_API19(mContext, contentUri);
+
+
+    }
+    @SuppressLint("NewApi")
+    public static String getRealPathFromURI_API19(Context context, Uri uri){
+        String filePath = "";
+        String wholeID = DocumentsContract.getDocumentId(uri);
+
+        // Split at colon, use second item in the array
+        String id = wholeID.split(":")[1];
+
+        String[] column = { MediaStore.Images.Media.DATA };
+
+        // where id is equal to
+        String sel = MediaStore.Images.Media._ID + "=?";
+
+        Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                column, sel, new String[]{ id }, null);
+
+        int columnIndex = cursor.getColumnIndex(column[0]);
+
+        if (cursor.moveToFirst()) {
+            filePath = cursor.getString(columnIndex);
+        }
+        cursor.close();
+        return filePath;
     }
 
     /**
@@ -381,61 +420,4 @@ public class SiliCompressor {
         }
     }
 
-    class ImageCompressionAsyncTask extends AsyncTask<String, Void, String> {
-        ProgressDialog mProgressDialog;
-
-        public ImageCompressionAsyncTask(Context context) {
-
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            String filePath = compressImage(params[0], new File(params[1]));
-            return filePath;
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-
-
-        }
-    }
-
-    class VideoCompress extends AsyncTask<String, String, String>{
-
-        @Override
-        protected String doInBackground(String... paths) {
-            try {
-                boolean isconverted = MediaController.getInstance().convertVideo(Util.getFilePath(mContext, Uri.parse(paths[0])), new File(paths[1]));
-                if (isconverted){
-                    publishProgress("Video Conversion Complete");
-                }else{
-                    publishProgress("Video conversion in progress");
-                }
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-            return MediaController.cachedFile.getPath();
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            Log.i("Silicompressor", "Progress: "+values[0]);
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            videoCompressionPath = s;
-            Log.i("Silicompressor", "Path: "+s);
-        }
-    }
 }
