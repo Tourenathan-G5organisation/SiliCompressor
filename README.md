@@ -12,7 +12,8 @@ Due to the high resolution of our Smartphone cameras and cameras from other devi
 
 Credit
 --------
-This image compressor part of this project is inspired from [Void Canvas] blog from which the core part of the compressor was done.
+The image compressor part of this project is inspired from [Void Canvas] blog from which the core part of the compressor was done.
+For the Video Compression part of this project, credit goes to [Jorge E. Hernandez (@lalongooo)] whose codes was used for the core part of the video compressor module.
 
 Usage
 --------
@@ -88,3 +89,4 @@ limitations under the License.
 [snap]:  https://oss.sonatype.org/content/repositories/snapshots
 [iceteck]:  http://iceteck.com/iceteck/index.php
 [Void Canvas]: http://voidcanvas.com/whatsapp-like-image-compression-in-android/
+[Jorge E. Hernandez (@lalongooo)]: https://github.com/lalongooo
