@@ -297,7 +297,7 @@ public class SiliCompressor {
      * @return The Path of the compressed video file
      */
     public String compressVideo(String videoFileUri, String destinationUri) throws URISyntaxException {
-        boolean isconverted = MediaController.getInstance().convertVideo(Util.getFilePath(mContext, Uri.parse(videoFileUri)), new File(destinationUri));
+        boolean isconverted = MediaController.getInstance().convertVideo(videoFileUri, new File(destinationUri));
         if (isconverted){
             Log.v(LOG_TAG, "Video Conversion Complete");
         }else{
