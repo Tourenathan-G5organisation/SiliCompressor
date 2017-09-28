@@ -42,6 +42,11 @@ public class MediaController {
     private static volatile MediaController Instance = null;
     private boolean videoConvertFirstWrite = true;
 
+    //Default values
+    private final static int DEFAULT_VIDEO_WIDTH = 640;
+    private final static int DEFAULT_VIDEO_HEIGHT = 360;
+    private final static int DEFAULT_VIDEO_BITRATE = 450000;
+
     public static MediaController getInstance() {
         MediaController localInstance = Instance;
         if (localInstance == null) {
@@ -240,12 +245,27 @@ public void scheduleVideoConvert(String path, File dest) {
 
     /**
      * Perform the actual video compression. Processes the frames and does the magic
+     * Width, height and bitrate are now default
      * @param sourcePath the source uri for the file as per
      * @param destDir the destination directory where compressed video is eventually saved
      * @return
      */
+    public boolean  convertVideo(final String sourcePath, File destDir)
+    {
+        return convertVideo( sourcePath, destDir, 0, 0, 0 );
+    }
+
+    /**
+     * Perform the actual video compression. Processes the frames and does the magic
+     * @param sourcePath the source uri for the file as per
+     * @param destDir the destination directory where compressed video is eventually saved
+     * @param outWidth the target width of the converted video, 0 is default
+     * @param outHeight the target height of the converted video, 0 is default
+     * @param outBitrate the target bitrate of the converted video, 0 is default
+     * @return
+     */
     @TargetApi(16)
-    public boolean  convertVideo(final String sourcePath, File destDir) {
+    public boolean  convertVideo(final String sourcePath, File destDir, int outWidth, int outHeight, int outBitrate) {
         this.path=sourcePath;
 
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
@@ -257,14 +277,14 @@ public void scheduleVideoConvert(String path, File dest) {
         long startTime = -1;
         long endTime = -1;
 
-        int resultWidth = 640;
-        int resultHeight = 360;
+        int resultWidth = outWidth > 0 ? outWidth : DEFAULT_VIDEO_WIDTH;
+        int resultHeight = outHeight > 0 ? outHeight : DEFAULT_VIDEO_HEIGHT;
 
         int rotationValue = Integer.valueOf(rotation);
         int originalWidth = Integer.valueOf(width);
         int originalHeight = Integer.valueOf(height);
 
-        int bitrate = 450000;
+        int bitrate = outBitrate > 0 ? outBitrate : DEFAULT_VIDEO_BITRATE;
         int rotateRender = 0;
 
         File cacheFile = new File(destDir,

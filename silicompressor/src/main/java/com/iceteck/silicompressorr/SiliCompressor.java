@@ -292,12 +292,41 @@ public class SiliCompressor {
      * Perform background video compression. Make sure the videofileUri and destinationUri are valid
      * resources because this method does not account for missing directories hence your converted file
      * could be in an unknown location
-     * @param videoFileUri source uri for the video file
-     * @param destinationUri destination directory where converted file should be saved
+     * This uses default values for the converted videos
+     * @param videoFilePath source path for the video file
+     * @param destinationDir destination directory where converted file should be saved
      * @return The Path of the compressed video file
      */
-    public String compressVideo(String videoFileUri, String destinationUri) throws URISyntaxException {
-        boolean isconverted = MediaController.getInstance().convertVideo(Util.getFilePath(mContext, Uri.parse(videoFileUri)), new File(destinationUri));
+    public String compressVideo(String videoFilePath, String destinationDir) throws URISyntaxException {
+        return compressVideo( videoFilePath, destinationDir, 0, 0, 0 );
+    }
+
+    /**
+     * Perform background video compression. Make sure the videofileUri and destinationUri are valid
+     * resources because this method does not account for missing directories hence your converted file
+     * could be in an unknown location
+     * This uses default values for the converted videos
+     * @param videoFileUri source uri for the video file
+     * @param destinationDir destination directory where converted file should be saved
+     * @return The Path of the compressed video file
+     */
+    public String compressVideo(Uri videoFileUri, String destinationDir) throws URISyntaxException {
+        return compressVideo( videoFileUri, destinationDir, 0, 0, 0 );
+    }
+
+    /**
+     * Perform background video compression. Make sure the videofileUri and destinationUri are valid
+     * resources because this method does not account for missing directories hence your converted file
+     * could be in an unknown location
+     * @param videoFileUri source uri for the video file
+     * @param destinationDir destination directory where converted file should be saved
+     * @param outWidth the target width of the compressed video or 0 to use default width
+     * @param outHeight the target height of the compressed video or 0 to use default height
+     * @param bitrate the target bitrate of the compressed video or 0 to user default bitrate
+     * @return The Path of the compressed video file
+     */
+    public String compressVideo(Uri videoFileUri, String destinationDir, int outWidth, int outHeight, int bitrate) throws URISyntaxException {
+        boolean isconverted = MediaController.getInstance().convertVideo(Util.getFilePath(mContext, videoFileUri), new File(destinationDir), outWidth, outHeight, bitrate);
         if (isconverted){
             Log.v(LOG_TAG, "Video Conversion Complete");
         }else{
@@ -307,6 +336,31 @@ public class SiliCompressor {
         return MediaController.cachedFile.getPath();
 
     }
+
+
+    /**
+     * Perform background video compression. Make sure the videofileUri and destinationUri are valid
+     * resources because this method does not account for missing directories hence your converted file
+     * could be in an unknown location
+     * @param videoFilePath source path for the video file
+     * @param destinationDir destination directory where converted file should be saved
+     * @param outWidth the target width of the compressed video or 0 to use default width
+     * @param outHeight the target height of the compressed video or 0 to use default height
+     * @param bitrate the target bitrate of the compressed video or 0 to user default bitrate
+     * @return The Path of the compressed video file
+     */
+    public String compressVideo(String videoFilePath, String destinationDir, int outWidth, int outHeight, int bitrate) throws URISyntaxException {
+        boolean isconverted = MediaController.getInstance().convertVideo( videoFilePath, new File(destinationDir), outWidth, outHeight, bitrate);
+        if (isconverted){
+            Log.v(LOG_TAG, "Video Conversion Complete");
+        }else{
+            Log.v(LOG_TAG, "Video conversion in progress");
+        }
+
+        return MediaController.cachedFile.getPath();
+
+    }
+
 
     private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
         final int height = options.outHeight;
