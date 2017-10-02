@@ -24,8 +24,18 @@ To effectively use this library, you must make sure you have added the following
 ```
 #### Compress a video file and return the file path of the new video
 ```java
-String filePath = SiliCompressor.with(Context).compressVideo(sourceUriString, destinationUriString);
+The compressVideo method is an overloaded method which gives you many definations:
+
+i. This takes in the sourceVideoUri and destionationDirPath as first and second parameter respectively.
+String filePath = SiliCompressor.with(Context).compressVideo(sourceVideoUri, destionationDirPath);
+
+ii. This takes the sourceVideoPath and destionationDirPath as first and second parameter respectively.
+String filePath = SiliCompressor.with(Context).compressVideo(sourceVideoPath, destionationDirPath);
+
 ```
+
+Both method definations mentioned above can also take the disired resulting compressesd video **outWidth, outHight and bitrate** 
+
 #### Compress an image and return the file path of the new image
 ```java
 String filePath = SiliCompressor.with(Context).compress(imageUriString, destinationFile);
@@ -55,7 +65,7 @@ Download
 --------
 #### Gradle
 ```groovy
-compile 'com.iceteck.silicompressorr:silicompressor:2.0'
+compile 'com.iceteck.silicompressorr:silicompressor:2.1'
 ```
 
 ##### Maven
@@ -63,7 +73,7 @@ compile 'com.iceteck.silicompressorr:silicompressor:2.0'
 <dependency>
   <groupId>com.iceteck.silicompressorr</groupId>
   <artifactId>silicompressor</artifactId>
-  <version>2.0</version>
+  <version>2.1</version>
   <type>aar</type>
 </dependency>
 ```
