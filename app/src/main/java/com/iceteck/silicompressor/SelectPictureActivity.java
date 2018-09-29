@@ -203,8 +203,10 @@ public class SelectPictureActivity extends AppCompatActivity {
 
                 takeVideoIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 10);
                 takeVideoIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
-                capturedUri = Uri.fromFile(createMediaFile(TYPE_VIDEO));
-                //FileProvider.getUriForFile(this, getApplicationContext().getPackageName()+ FILE_PROVIDER_EXTENTION, createMediaFile(TYPE_VIDEO));
+                capturedUri = FileProvider.getUriForFile(this,
+                        FILE_PROVIDER_AUTHORITY,
+                        createMediaFile(TYPE_VIDEO));
+
                 takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, capturedUri);
                 Log.d(LOG_TAG, "VideoUri: " + capturedUri.toString());
                 startActivityForResult(takeVideoIntent, REQUEST_TAKE_VIDEO);
@@ -227,16 +229,16 @@ public class SelectPictureActivity extends AppCompatActivity {
 
 
             new ImageCompressionAsyncTask(this).execute(mCurrentPhotoPath,
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/Silicompressor/images");
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Silicompressor/images");
 
 
         } else if (requestCode == REQUEST_TAKE_VIDEO && resultCode == RESULT_OK) {
             if (data.getData() != null) {
                 //create destination directory
-                File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + getPackageName() + "/media/videos");
+                File f = new File( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES) + "/Silicompressor/videos");
                 if (f.mkdirs() || f.isDirectory())
                     //compress and output new video specs
-                    new VideoCompressAsyncTask(this).execute(data.getData().toString(), f.getPath());
+                    new VideoCompressAsyncTask(this).execute(mCurrentPhotoPath, f.getPath());
 
             }
         }
@@ -331,7 +333,7 @@ public class SelectPictureActivity extends AppCompatActivity {
             String filePath = null;
             try {
 
-                filePath = SiliCompressor.with(mContext).compressVideo(Uri.parse(paths[0]), paths[1]);
+                filePath = SiliCompressor.with(mContext).compressVideo(paths[0], paths[1]);
 
             } catch (URISyntaxException e) {
                 e.printStackTrace();
