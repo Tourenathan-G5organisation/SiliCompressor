@@ -13,7 +13,9 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.iceteck.silicompressorr.videocompression.MediaController;
 
@@ -34,17 +36,18 @@ import java.util.Locale;
 public class SiliCompressor {
 
     private static final String LOG_TAG = SiliCompressor.class.getSimpleName();
-    public static String videoCompressionPath ;
+    public static String videoCompressionPath;
 
     static volatile SiliCompressor singleton = null;
     private static Context mContext;
+    public static final String FILE_PROVIDER_AUTHORITY = "com.iceteck.silicompressor.provider";
 
-    public SiliCompressor(Context context){
+    public SiliCompressor(Context context) {
         mContext = context;
     }
 
     // initialise the class and set the context
-    public static SiliCompressor with(Context context){
+    public static SiliCompressor with(Context context) {
         if (singleton == null) {
             synchronized (SiliCompressor.class) {
                 if (singleton == null) {
@@ -57,41 +60,49 @@ public class SiliCompressor {
     }
 
     /**
-     * Compresses the image at the specified Uri String and and return the filepath of the compressed image.
-     * @param imageUri imageUri Uri (String) of the source image you wish to compress
-     * @return filepath
+     * Compress the image at with the specified path and return the filepath of the compressed image.
+     *
+     * @param imagePath   The path of the image you wish to compress.
+     * @param destination The destination directory where the compressed image will be stored.
+     * @return filepath  The path of the compressed image file
      */
-    public String compress(String imageUri, File destination){
-        return compressImage(imageUri, destination);
+    public String compress(String imagePath, File destination) {
+        return compressImage(imagePath, destination);
     }
 
     /**
-     * Compresses the image at the specified Uri String and and return the filepath of the compressed image.
-     * @param imageUri imageUri Uri (String) of the source image you wish to compress
-     * @return filepath
+     * Compress the image at with the specified path and return the filepath of the compressed image.
+     *
+     * @param imagePath         The path of the image you wish to compress.
+     * @param destination       The destination directory where the compressed image will be stored.
+     * @param deleteSourceImage if True will delete the original file
+     * @return filepath  The path of the compressed image file
      */
-    public String compress(String imageUri, File destination, boolean deleteSourceImage){
+    public String compress(String imagePath, File destination, boolean deleteSourceImage) {
 
-        String compressUri =  compressImage(imageUri, destination);
+        String compressedImagePath = compressImage(imagePath, destination);
 
-        if (deleteSourceImage)
-        {
-            File source = new File(getRealPathFromURI(imageUri));
-            if (source.exists()) {
-                boolean isdeleted = source.delete();
-                Log.d(LOG_TAG, (isdeleted) ? "SourceImage File deleted" : "SourceImage File not deleted");
-            }
+        if (deleteSourceImage) {
+            boolean isdeleted = deleteImageFile(imagePath);
+            Log.d(LOG_TAG, (isdeleted) ? "Source image file deleted" : "Error: Source image file not deleted.");
+
         }
 
-        return compressUri;
+        return compressedImagePath;
     }
 
-
+    /**
+     * Compress drawable file with specified drawableID
+     *
+     * @param drawableID ID of the drawable file to compress
+     * @return The path to the compressed file or null if the could not access drawable file
+     * @throws IOException
+     */
     public String compress(int drawableID) throws IOException {
 
         // Create a bitmap from this drawable
         Bitmap bitmap = BitmapFactory.decodeResource(mContext.getApplicationContext().getResources(), drawableID);
-        if (null != bitmap){
+        if (null != bitmap) {
             // Create a file from the bitmap
 
             // Create an image file name
@@ -108,18 +119,17 @@ public class SiliCompressor {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
 
             // Compress the new file
-            Uri copyImageUri = Uri.fromFile(image);
+            Uri copyImageUri = FileProvider.getUriForFile(mContext, FILE_PROVIDER_AUTHORITY, image);
 
-            String compressImagePath = compressImage(copyImageUri.toString(),new File(Environment.getExternalStorageDirectory(), "Silicompressor/images"));
+            String compressedImagePath = compressImage(image.getAbsolutePath(), new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Silicompressor/images"));
 
-            // Delete the file create from the drawable Id
+            // Delete the file created from the drawable Id
             if (image.exists()) {
-                boolean isdeleted = image.delete();
-                Log.d(LOG_TAG, (isdeleted) ? "SourceImage File deleted" : "SourceImage File not deleted");
+                deleteImageFile(image.getAbsolutePath());
             }
 
-            // return the path to the compress image
-            return compressImagePath;
+            // return the path to the compressed image
+            return compressedImagePath;
         }
 
         return null;
@@ -127,51 +137,55 @@ public class SiliCompressor {
 
 
     /**
-     * Compresses the image at the specified Uri String and and return the bitmap data of the compressed image.
+     * Compress the image at with the specified path and return the bitmap data of the compressed image.
      *
-     * @param imageUri imageUri Uri (String) of the source image you wish to compress
+     * @param imagePath The path of the image file you wish to compress
      * @return Bitmap format of the new image file (compressed)
      * @throws IOException
      */
-    public Bitmap getCompressBitmap(String imageUri) throws IOException {
-        File imageFile = new File(compressImage(imageUri,new File(Environment.getExternalStorageDirectory(), "Silicompressor/images")));
-        Uri newImageUri = Uri.fromFile(imageFile);
-        Bitmap bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), newImageUri);
-        return bitmap;
+    public Bitmap getCompressBitmap(String imagePath) throws IOException {
+
+        // Return the required bitmap
+        return getCompressBitmap(imagePath, false);
+
     }
 
     /**
-     * Compresses the image at the specified Uri String and and return the bitmap data of the compressed image.
-     * @param imageUri Uri (String) of the source image you wish to compress
+     * Compress the image at with the specified path and return the bitmap data of the compressed image.
+     *
+     * @param imagePath         The path of the image file you wish to compress.
      * @param deleteSourceImage If True will delete the source file
      * @return Compress image bitmap
      * @throws IOException
      */
-    public Bitmap getCompressBitmap(String imageUri, boolean deleteSourceImage) throws IOException {
-        File imageFile = new File(compressImage(imageUri,new File(Environment.getExternalStorageDirectory(), "Silicompressor/images")));
-        Uri newImageUri = Uri.fromFile(imageFile);
+    public Bitmap getCompressBitmap(String imagePath, boolean deleteSourceImage) throws IOException {
+        File imageFile = new File(compressImage(imagePath, new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Silicompressor/images")));
+        Uri newImageUri = FileProvider.getUriForFile(mContext, FILE_PROVIDER_AUTHORITY, imageFile);
+
         Bitmap bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), newImageUri);
 
-        if (deleteSourceImage)
-        {
-            File source = new File(getRealPathFromURI(imageUri));
-            if (source.exists()) {
-                boolean isdeleted = source.delete();
-                Log.d(LOG_TAG, (isdeleted) ? "SourceImage File deleted" : "SourceImage File not deleted");
-            }
+        if (deleteSourceImage) {
+            boolean isdeleted = deleteImageFile(imagePath);
+            Log.d(LOG_TAG, (isdeleted) ? "Source image file deleted" : "Error: Source image file not deleted.");
+
         }
+
+        // Delete the file created during the image compression
+        deleteImageFile(imageFile.getAbsolutePath());
+
+        // Return the required bitmap
         return bitmap;
     }
 
     /**
-     * Do the actual compression of this image
-     * @param imageUri source image file to compress
-     * @param destDirectory destination directory to place image in
-     * @return uri string of the compressed image
+     * Does the actual image compression
+     *
+     * @param imagePath     The path of the image file you wish to compress.
+     * @param destDirectory destination directory where the compressed image will be stored.
+     * @return The path of the compressed image file
      */
-    private String compressImage(String imageUri, File destDirectory) {
+    private String compressImage(String imagePath, File destDirectory) {
 
-        String filePath = getRealPathFromURI(imageUri);
         Bitmap scaledBitmap = null;
 
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -179,7 +193,7 @@ public class SiliCompressor {
 //      by setting this field as true, the actual bitmap pixels are not loaded in the memory. Just the bounds are loaded. If
 //      you try the use the bitmap here, you will get null.
         options.inJustDecodeBounds = true;
-        Bitmap bmp = BitmapFactory.decodeFile(filePath, options);
+        Bitmap bmp = BitmapFactory.decodeFile(imagePath, options);
 
         int actualHeight = options.outHeight;
         int actualWidth = options.outWidth;
@@ -223,7 +237,7 @@ public class SiliCompressor {
 
         try {
 //          load the bitmap from its path
-            bmp = BitmapFactory.decodeFile(filePath, options);
+            bmp = BitmapFactory.decodeFile(imagePath, options);
         } catch (OutOfMemoryError exception) {
             exception.printStackTrace();
 
@@ -249,7 +263,7 @@ public class SiliCompressor {
 //      check the rotation of the image and display it properly
         ExifInterface exif;
         try {
-            exif = new ExifInterface(filePath);
+            exif = new ExifInterface(imagePath);
 
             int orientation = exif.getAttributeInt(
                     ExifInterface.TAG_ORIENTATION, 0);
@@ -273,18 +287,18 @@ public class SiliCompressor {
         }
 
         FileOutputStream out = null;
-        String filename = getFilename(imageUri, destDirectory);
+        String resultFilePath = getFilename(imagePath, destDirectory);
         try {
-            out = new FileOutputStream(filename);
+            out = new FileOutputStream(resultFilePath);
 
-//          write the compressed bitmap at the destination specified by filename.
+            //  write the compressed bitmap at the destination specified by filename.
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
-        return filename;
+        return resultFilePath;
 
     }
 
@@ -293,12 +307,13 @@ public class SiliCompressor {
      * resources because this method does not account for missing directories hence your converted file
      * could be in an unknown location
      * This uses default values for the converted videos
-     * @param videoFilePath source path for the video file
+     *
+     * @param videoFilePath  source path for the video file
      * @param destinationDir destination directory where converted file should be saved
      * @return The Path of the compressed video file
      */
     public String compressVideo(String videoFilePath, String destinationDir) throws URISyntaxException {
-        return compressVideo( videoFilePath, destinationDir, 0, 0, 0 );
+        return compressVideo(videoFilePath, destinationDir, 0, 0, 0);
     }
 
     /**
@@ -306,30 +321,32 @@ public class SiliCompressor {
      * resources because this method does not account for missing directories hence your converted file
      * could be in an unknown location
      * This uses default values for the converted videos
-     * @param videoFileUri source uri for the video file
+     *
+     * @param videoFileUri   source uri for the video file
      * @param destinationDir destination directory where converted file should be saved
      * @return The Path of the compressed video file
      */
     public String compressVideo(Uri videoFileUri, String destinationDir) throws URISyntaxException {
-        return compressVideo( videoFileUri, destinationDir, 0, 0, 0 );
+        return compressVideo(videoFileUri, destinationDir, 0, 0, 0);
     }
 
     /**
      * Perform background video compression. Make sure the videofileUri and destinationUri are valid
      * resources because this method does not account for missing directories hence your converted file
      * could be in an unknown location
-     * @param videoFileUri source uri for the video file
+     *
+     * @param videoFileUri   source uri for the video file
      * @param destinationDir destination directory where converted file should be saved
-     * @param outWidth the target width of the compressed video or 0 to use default width
-     * @param outHeight the target height of the compressed video or 0 to use default height
-     * @param bitrate the target bitrate of the compressed video or 0 to user default bitrate
+     * @param outWidth       the target width of the compressed video or 0 to use default width
+     * @param outHeight      the target height of the compressed video or 0 to use default height
+     * @param bitrate        the target bitrate of the compressed video or 0 to user default bitrate
      * @return The Path of the compressed video file
      */
     public String compressVideo(Uri videoFileUri, String destinationDir, int outWidth, int outHeight, int bitrate) throws URISyntaxException {
         boolean isconverted = MediaController.getInstance().convertVideo(Util.getFilePath(mContext, videoFileUri), new File(destinationDir), outWidth, outHeight, bitrate);
-        if (isconverted){
+        if (isconverted) {
             Log.v(LOG_TAG, "Video Conversion Complete");
-        }else{
+        } else {
             Log.v(LOG_TAG, "Video conversion in progress");
         }
 
@@ -342,18 +359,19 @@ public class SiliCompressor {
      * Perform background video compression. Make sure the videofileUri and destinationUri are valid
      * resources because this method does not account for missing directories hence your converted file
      * could be in an unknown location
-     * @param videoFilePath source path for the video file
+     *
+     * @param videoFilePath  source path for the video file
      * @param destinationDir destination directory where converted file should be saved
-     * @param outWidth the target width of the compressed video or 0 to use default width
-     * @param outHeight the target height of the compressed video or 0 to use default height
-     * @param bitrate the target bitrate of the compressed video or 0 to user default bitrate
+     * @param outWidth       the target width of the compressed video or 0 to use default width
+     * @param outHeight      the target height of the compressed video or 0 to use default height
+     * @param bitrate        the target bitrate of the compressed video or 0 to user default bitrate
      * @return The Path of the compressed video file
      */
     public String compressVideo(String videoFilePath, String destinationDir, int outWidth, int outHeight, int bitrate) throws URISyntaxException {
-        boolean isconverted = MediaController.getInstance().convertVideo( videoFilePath, new File(destinationDir), outWidth, outHeight, bitrate);
-        if (isconverted){
+        boolean isconverted = MediaController.getInstance().convertVideo(videoFilePath, new File(destinationDir), outWidth, outHeight, bitrate);
+        if (isconverted) {
             Log.v(LOG_TAG, "Video Conversion Complete");
-        }else{
+        } else {
             Log.v(LOG_TAG, "Video conversion in progress");
         }
 
@@ -381,6 +399,13 @@ public class SiliCompressor {
         return inSampleSize;
     }
 
+    /**
+     * Get the file path of the compressed file
+     *
+     * @param filename
+     * @param file     Destination directory
+     * @return
+     */
     private String getFilename(String filename, File file) {
         if (!file.exists()) {
             file.mkdirs();
@@ -397,6 +422,7 @@ public class SiliCompressor {
 
     /**
      * Gets a valid path from the supply contentURI
+     *
      * @param contentURI
      * @return A validPath of the image
      */
@@ -408,40 +434,16 @@ public class SiliCompressor {
         } else {
             cursor.moveToFirst();
             int index = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            Log.e(LOG_TAG, String.format("%d", index));
+
             String str = cursor.getString(index);
             cursor.close();
             return str;
         }
-        // return  FileUtils.getPath(mContext, contentUri);
-
-        // return  getRealPathFromURI_API19(mContext, contentUri);
 
 
     }
-    @SuppressLint("NewApi")
-    public static String getRealPathFromURI_API19(Context context, Uri uri){
-        String filePath = "";
-        String wholeID = DocumentsContract.getDocumentId(uri);
 
-        // Split at colon, use second item in the array
-        String id = wholeID.split(":")[1];
-
-        String[] column = { MediaStore.Images.Media.DATA };
-
-        // where id is equal to
-        String sel = MediaStore.Images.Media._ID + "=?";
-
-        Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                column, sel, new String[]{ id }, null);
-
-        int columnIndex = cursor.getColumnIndex(column[0]);
-
-        if (cursor.moveToFirst()) {
-            filePath = cursor.getString(columnIndex);
-        }
-        cursor.close();
-        return filePath;
-    }
 
     /**
      * Fluent API for creating {@link SiliCompressor} instances.
@@ -472,4 +474,22 @@ public class SiliCompressor {
         }
     }
 
+    /**
+     * Deletes image file for a given path.
+     *
+     * @param imagePath The path of the photo to be deleted.
+     * @return True if the file is deleted and False otherwise
+     */
+    static boolean deleteImageFile(String imagePath) {
+        // Get the file
+        File imageFile = new File(imagePath);
+
+        boolean deleted = false;
+        // Delete the image
+        if (imageFile.exists()) {
+            deleted = imageFile.delete();
+        }
+
+        return deleted;
+    }
 }

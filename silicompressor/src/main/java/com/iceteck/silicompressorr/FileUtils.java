@@ -29,6 +29,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
@@ -36,6 +37,8 @@ import java.io.File;
 import java.io.FileFilter;
 import java.text.DecimalFormat;
 import java.util.Comparator;
+
+import static com.iceteck.silicompressorr.SiliCompressor.FILE_PROVIDER_AUTHORITY;
 
 /**
  * @version 2009-07-03
@@ -103,9 +106,10 @@ public class FileUtils {
      * @param file
      * @return uri
      */
-    public static Uri getUri(File file) {
+    public static Uri getUri(Context context, File file) {
         if (file != null) {
-            return Uri.fromFile(file);
+            return FileProvider.getUriForFile(context, FILE_PROVIDER_AUTHORITY, file);
+            //Uri.fromFile(file);
         }
         return null;
     }
@@ -386,7 +390,7 @@ public class FileUtils {
      * @author paulburke
      */
     public static Bitmap getThumbnail(Context context, File file) {
-        return getThumbnail(context, getUri(file), getMimeType(file));
+        return getThumbnail(context, getUri(context, file), getMimeType(file));
     }
 
     /**

@@ -8,11 +8,13 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -35,10 +37,11 @@ public class SelectPictureActivity extends AppCompatActivity {
 
     public static final String LOG_TAG = SelectPictureActivity.class.getSimpleName();
 
+    public static final String FILE_PROVIDER_AUTHORITY = "com.iceteck.silicompressor.provider";
     private static final int REQUEST_TAKE_CAMERA_PHOTO = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE_VID = 2;
-    private static final int RESQUEST_TAKE_VIDEO = 200;
+    private static final int REQUEST_TAKE_VIDEO = 200;
     private static final int TYPE_IMAGE = 1;
     private static final int TYPE_VIDEO = 2;
 
@@ -58,7 +61,7 @@ public class SelectPictureActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         imageView = (ImageView) findViewById(R.id.photo);
-        videoImageView = (ImageView)findViewById(R.id.videoImageView);
+        videoImageView = (ImageView) findViewById(R.id.videoImageView);
         picDescription = (TextView) findViewById(R.id.pic_description);
         compressionMsg = (LinearLayout) findViewById(R.id.compressionMsg);
 
@@ -80,34 +83,30 @@ public class SelectPictureActivity extends AppCompatActivity {
     /**
      * Request Permission for writing to External Storage in 6.0 and up
      */
-    private void requestPermissions(int mediaType){
+    private void requestPermissions(int mediaType) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-            if (mediaType == TYPE_IMAGE){
+            if (mediaType == TYPE_IMAGE) {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_REQUEST_WRITE_STORAGE);
-            }
-            else {
+            } else {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_REQUEST_WRITE_STORAGE_VID);
             }
 
-        }
-        else{
-            if (mediaType == TYPE_IMAGE){
+        } else {
+            if (mediaType == TYPE_IMAGE) {
                 // Want to compress an image
                 dispatchTakePictureIntent();
-            }
-            else if (mediaType == TYPE_VIDEO){
+            } else if (mediaType == TYPE_VIDEO) {
                 // Want to compress a video
                 dispatchTakeVideoIntent();
             }
 
         }
     }
-
 
 
     @Override
@@ -117,9 +116,8 @@ public class SelectPictureActivity extends AppCompatActivity {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     dispatchTakePictureIntent();
-                }
-                else{
-                    Toast.makeText(this, "You need enable the permission for External Storage Write" +
+                } else {
+                    Toast.makeText(this, "You need to enable the permission for External Storage Write" +
                             " to test out this library.", Toast.LENGTH_LONG).show();
                     return;
                 }
@@ -129,9 +127,8 @@ public class SelectPictureActivity extends AppCompatActivity {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     dispatchTakeVideoIntent();
-                }
-                else{
-                    Toast.makeText(this, "You need enable the permission for External Storage Write" +
+                } else {
+                    Toast.makeText(this, "You need to enable the permission for External Storage Write" +
                             " to test out this library.", Toast.LENGTH_LONG).show();
                     return;
                 }
@@ -145,17 +142,17 @@ public class SelectPictureActivity extends AppCompatActivity {
 
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String fileName = type == 1 ? "JPEG_" + timeStamp + "_" : "VID_" + timeStamp + "_";
+        String fileName = (type == TYPE_IMAGE) ? "JPEG_" + timeStamp + "_" : "VID_" + timeStamp + "_";
         File storageDir = Environment.getExternalStoragePublicDirectory(
-                type == 1 ? Environment.DIRECTORY_PICTURES : Environment.DIRECTORY_MOVIES);
+                type == TYPE_IMAGE ? Environment.DIRECTORY_PICTURES : Environment.DIRECTORY_MOVIES);
         File file = File.createTempFile(
                 fileName,  /* prefix */
-                type == 1 ? ".jpg" : ".mp4",         /* suffix */
+                type == TYPE_IMAGE ? ".jpg" : ".mp4",         /* suffix */
                 storageDir      /* directory */
         );
 
-        // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath = "file:" + file.getAbsolutePath();
+        // Get the path of the file created
+        mCurrentPhotoPath = file.getAbsolutePath();
         Log.d(LOG_TAG, "mCurrentPhotoPath: " + mCurrentPhotoPath);
         return file;
     }
@@ -166,7 +163,8 @@ public class SelectPictureActivity extends AppCompatActivity {
 
 
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        //takePictureIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION, ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             // Create the File where the photo should go
@@ -175,21 +173,23 @@ public class SelectPictureActivity extends AppCompatActivity {
                 photoFile = createMediaFile(TYPE_IMAGE);
             } catch (IOException ex) {
                 // Error occurred while creating the File
+                Log.d(LOG_TAG, "Error occurred while creating the file");
 
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-                capturedUri = Uri.fromFile(photoFile);
+
+                // Get the content URI for the image file
+                capturedUri = FileProvider.getUriForFile(this,
+                        FILE_PROVIDER_AUTHORITY,
+                        photoFile);
+
                 Log.d(LOG_TAG, "Log1: " + String.valueOf(capturedUri));
-                Log.d(LOG_TAG, "Log2: "  + capturedUri.toString());
 
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, capturedUri);
 
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_CAMERA_PHOTO);
-                /*String title = getString(R.string.choose_a_pic);
-                Intent chooserIntent = Intent.createChooser(intent, title);
-                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[] { takePictureIntent });
-                startActivityForResult(chooserIntent, REQUEST_TAKE_CAMERA_PHOTO);*/
+
             }
         }
     }
@@ -197,15 +197,17 @@ public class SelectPictureActivity extends AppCompatActivity {
 
     private void dispatchTakeVideoIntent() {
         Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        takeVideoIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         if (takeVideoIntent.resolveActivity(getPackageManager()) != null) {
             try {
 
                 takeVideoIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 10);
                 takeVideoIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
                 capturedUri = Uri.fromFile(createMediaFile(TYPE_VIDEO));
+                //FileProvider.getUriForFile(this, getApplicationContext().getPackageName()+ FILE_PROVIDER_EXTENTION, createMediaFile(TYPE_VIDEO));
                 takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, capturedUri);
-                Log.d(LOG_TAG, "VideoUri: "  + capturedUri.toString());
-                startActivityForResult(takeVideoIntent, RESQUEST_TAKE_VIDEO);
+                Log.d(LOG_TAG, "VideoUri: " + capturedUri.toString());
+                startActivityForResult(takeVideoIntent, REQUEST_TAKE_VIDEO);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -223,21 +225,12 @@ public class SelectPictureActivity extends AppCompatActivity {
         //verify if the image was gotten successfully
         if (requestCode == REQUEST_TAKE_CAMERA_PHOTO && resultCode == Activity.RESULT_OK) {
 
-            try {
-                if ((null == data) || (data.getData() == null)){
-                    new ImageCompressionAsyncTask(this).execute(capturedUri.toString(),
-                            Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getPackageName()+"/media/images");
-                }
-                else {
-                    new ImageCompressionAsyncTask(this).execute(data.toString(),
-                            Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+getPackageName()+"/media/images");
-                }
 
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            new ImageCompressionAsyncTask(this).execute(mCurrentPhotoPath,
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/Silicompressor/images");
 
-        }else if (requestCode == RESQUEST_TAKE_VIDEO && resultCode == RESULT_OK){
+
+        } else if (requestCode == REQUEST_TAKE_VIDEO && resultCode == RESULT_OK) {
             if (data.getData() != null) {
                 //create destination directory
                 File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + getPackageName() + "/media/videos");
@@ -250,11 +243,11 @@ public class SelectPictureActivity extends AppCompatActivity {
 
     }
 
-    class ImageCompressionAsyncTask extends AsyncTask<String, Void, String>{
+    class ImageCompressionAsyncTask extends AsyncTask<String, Void, String> {
 
         Context mContext;
 
-        public ImageCompressionAsyncTask(Context context){
+        public ImageCompressionAsyncTask(Context context) {
             mContext = context;
         }
 
@@ -295,6 +288,8 @@ public class SelectPictureActivity extends AppCompatActivity {
 
             File imageFile = new File(s);
             compressUri = Uri.fromFile(imageFile);
+            //FileProvider.getUriForFile(mContext, mContext.getApplicationContext().getPackageName()+ FILE_PROVIDER_EXTENTION, imageFile);
+
 
             try {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), compressUri);
@@ -307,8 +302,7 @@ public class SelectPictureActivity extends AppCompatActivity {
                 String text = String.format(Locale.US, "Name: %s\nSize: %fKB\nWidth: %d\nHeight: %d", name, length, compressWidth, compressHieght);
                 picDescription.setVisibility(View.VISIBLE);
                 picDescription.setText(text);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
@@ -316,11 +310,11 @@ public class SelectPictureActivity extends AppCompatActivity {
     }
 
 
-    class VideoCompressAsyncTask extends AsyncTask<String, String, String>{
+    class VideoCompressAsyncTask extends AsyncTask<String, String, String> {
 
         Context mContext;
 
-        public VideoCompressAsyncTask(Context context){
+        public VideoCompressAsyncTask(Context context) {
             mContext = context;
         }
 
@@ -342,7 +336,7 @@ public class SelectPictureActivity extends AppCompatActivity {
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             }
-            return  filePath;
+            return filePath;
 
         }
 
@@ -353,15 +347,15 @@ public class SelectPictureActivity extends AppCompatActivity {
             File imageFile = new File(compressedFilePath);
             float length = imageFile.length() / 1024f; // Size in KB
             String value;
-            if(length >= 1024)
-                value = length/1024f+" MB";
+            if (length >= 1024)
+                value = length / 1024f + " MB";
             else
-                value = length+" KB";
+                value = length + " KB";
             String text = String.format(Locale.US, "%s\nName: %s\nSize: %s", getString(R.string.video_compression_complete), imageFile.getName(), value);
             compressionMsg.setVisibility(View.GONE);
             picDescription.setVisibility(View.VISIBLE);
             picDescription.setText(text);
-            Log.i("Silicompressor", "Path: "+compressedFilePath);
+            Log.i("Silicompressor", "Path: " + compressedFilePath);
         }
     }
 

@@ -24,15 +24,15 @@ To effectively use this library, you must make sure you have added the following
 ```
 #### Compress a video file and return the file path of the new video
 ```java
-String filePath = SiliCompressor.with(Context).compressVideo(sourceUriString, destinationUriString);
+String filePath = SiliCompressor.with(Context).compressVideo(sourceUriString, destinationDirectory);
 ```
 #### Compress an image and return the file path of the new image
 ```java
-String filePath = SiliCompressor.with(Context).compress(imageUriString, destinationFile);
+String filePath = SiliCompressor.with(Context).compress(imagePath, destinationDirectory);
 ```
 #### Compress an image and return the file path of the new image while deleting the source image
 ```java
-String filePath = SiliCompressor.with(Context).compress(imageUriString, destinationFile, true);
+String filePath = SiliCompressor.with(Context).compress(imagePath, destinationDirectory, true);
 ```
 
 #### Compress an image drawable and return the file path of the new image
@@ -42,12 +42,12 @@ String filePath = SiliCompressor.with(Context).compress(R.drawable.icon);
 
 #### Compress an image and return the bitmap data of the new image
 ```java
-Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imageUriString);
+Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imagePath);
 ```
 
 #### Compress an image and return the bitmap data of the new image while deleting the source image
 ```java
-Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imageUriString, true);
+Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imagePath, true);
 ```
 
 
@@ -55,7 +55,7 @@ Download
 --------
 #### Gradle
 ```groovy
-compile 'com.iceteck.silicompressorr:silicompressor:2.0'
+compile 'com.iceteck.silicompressorr:silicompressor:2.2'
 ```
 
 ##### Maven
@@ -63,7 +63,7 @@ compile 'com.iceteck.silicompressorr:silicompressor:2.0'
 <dependency>
   <groupId>com.iceteck.silicompressorr</groupId>
   <artifactId>silicompressor</artifactId>
-  <version>2.0</version>
+  <version>2.2</version>
   <type>aar</type>
 </dependency>
 ```
@@ -71,7 +71,7 @@ Snapshots of the development version are available in [Sonatype's `snapshots` re
 
 License
 --------
-Copyright 2016 [IceTeck][iceteck]
+Copyright 2016 [Teyou Toure Nathan][toure]
 
 Licensed under the Apache License, Version 2.0 (the "License") and GNU General Public License v2.0;
 
@@ -88,6 +88,6 @@ limitations under the License.
 
 
 [snap]:  https://oss.sonatype.org/content/repositories/snapshots
-[iceteck]:  http://iceteck.com/iceteck/index.php
+[toure]:  https://www.linkedin.com/in/toure-nathan/
 [Void Canvas]: http://voidcanvas.com/whatsapp-like-image-compression-in-android/
 [Jorge E. Hernandez (@lalongooo)]: https://github.com/lalongooo
