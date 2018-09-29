@@ -36,7 +36,7 @@ ext {
     libraryName = 'SiliCompressor'
     artifact = 'silicompressor'
 
-    libraryDescription = 'This is a powerful image compression library for android.'
+    libraryDescription = 'This is a powerful image and video compression library for android.'
 
     siteUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor'
     gitUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor.git'
