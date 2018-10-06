@@ -55,7 +55,7 @@ Download
 --------
 #### Gradle
 ```groovy
-implementation 'com.iceteck.silicompressorr:silicompressor:2.1'
+implementation 'com.iceteck.silicompressorr:silicompressor:2.2.1'
 ```
 
 ##### Maven
@@ -63,7 +63,7 @@ implementation 'com.iceteck.silicompressorr:silicompressor:2.1'
 <dependency>
   <groupId>com.iceteck.silicompressorr</groupId>
   <artifactId>silicompressor</artifactId>
-  <version>2.1</version>
+  <version>2.2.1</version>
   <type>aar</type>
 </dependency>
 ```
