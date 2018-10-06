@@ -416,6 +416,7 @@ public class SiliCompressor {
 
 
         /**
+         * @param context Context from which the library is called
          * Start building a new {@link SiliCompressor} instance.
          */
         public Builder(Context context) {
