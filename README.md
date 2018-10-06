@@ -24,7 +24,7 @@ To effectively use this library, you must make sure you have added the following
 ```
 #### Compress a video file and return the file path of the new video
 ```java
-String filePath = SiliCompressor.with(Context).compressVideo(sourceUriString, destinationDirectory);
+String filePath = SiliCompressor.with(Context).compressVideo(videoPath, destinationDirectory);
 ```
 #### Compress an image and return the file path of the new image
 ```java
