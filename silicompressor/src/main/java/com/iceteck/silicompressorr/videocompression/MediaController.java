@@ -695,7 +695,8 @@ public void scheduleVideoConvert(String path, File dest) {
                     try {
                         mediaMuxer.finishMovie(false);
                     } catch (Exception e) {
-                        Log.e("tmessages", e.getMessage());
+                        String msg = e.getMessage() == null ? "An error occurred at the finishMovie" : e.getMessage();
+                        Log.e("tmessages", msg);
                     }
                 }
                 Log.e("tmessages", "time = " + (System.currentTimeMillis() - time));
