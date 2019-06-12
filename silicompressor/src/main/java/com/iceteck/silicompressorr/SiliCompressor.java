@@ -40,7 +40,7 @@ public class SiliCompressor {
 
     static volatile SiliCompressor singleton = null;
     private static Context mContext;
-    public static final String FILE_PROVIDER_AUTHORITY = "com.iceteck.silicompressor.provider";
+    public static final String FILE_PROVIDER_AUTHORITY = ".iceteck.silicompressor.provider";
 
     public SiliCompressor(Context context) {
         mContext = context;
@@ -119,7 +119,7 @@ public class SiliCompressor {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
 
             // Compress the new file
-            Uri copyImageUri = FileProvider.getUriForFile(mContext, FILE_PROVIDER_AUTHORITY, image);
+            Uri copyImageUri = FileProvider.getUriForFile(mContext, mContext.getPackageName()+FILE_PROVIDER_AUTHORITY, image);
 
             String compressedImagePath = compressImage(image.getAbsolutePath(), new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Silicompressor/images"));
 
@@ -160,7 +160,7 @@ public class SiliCompressor {
      */
     public Bitmap getCompressBitmap(String imagePath, boolean deleteSourceImage) throws IOException {
         File imageFile = new File(compressImage(imagePath, new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Silicompressor/images")));
-        Uri newImageUri = FileProvider.getUriForFile(mContext, FILE_PROVIDER_AUTHORITY, imageFile);
+        Uri newImageUri = FileProvider.getUriForFile(mContext, getAuthorities(mContext), imageFile);
 
         Bitmap bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), newImageUri);
 
@@ -454,5 +454,9 @@ public class SiliCompressor {
         }
 
         return deleted;
+    }
+
+    public static String getAuthorities(Context context){
+        return context.getPackageName()+FILE_PROVIDER_AUTHORITY;
     }
 }
