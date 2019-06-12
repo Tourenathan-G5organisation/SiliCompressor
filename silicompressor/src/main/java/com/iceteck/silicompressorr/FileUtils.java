@@ -2,19 +2,19 @@ package com.iceteck.silicompressorr;
 
 
 /* Copyright (C) 2007-2008 OpenIntents.org
-        *
-        * Licensed under the Apache License, Version 2.0 (the "License");
-        * you may not use this file except in compliance with the License.
-        * You may obtain a copy of the License at
-        *
-        *      http://www.apache.org/licenses/LICENSE-2.0
-        *
-        * Unless required by applicable law or agreed to in writing, software
-        * distributed under the License is distributed on an "AS IS" BASIS,
-        * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-        * See the License for the specific language governing permissions and
-        * limitations under the License.
-        */
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 
 import android.content.ContentResolver;
@@ -38,7 +38,6 @@ import java.io.FileFilter;
 import java.text.DecimalFormat;
 import java.util.Comparator;
 
-import static com.iceteck.silicompressorr.SiliCompressor.FILE_PROVIDER_AUTHORITY;
 
 /**
  * @version 2009-07-03
@@ -108,7 +107,7 @@ public class FileUtils {
      */
     public static Uri getUri(Context context, File file) {
         if (file != null) {
-            return FileProvider.getUriForFile(context, FILE_PROVIDER_AUTHORITY, file);
+            return FileProvider.getUriForFile(context, SiliCompressor.getAuthorities(context), file);
             //Uri.fromFile(file);
         }
         return null;
@@ -267,65 +266,65 @@ public class FileUtils {
 
         // DocumentProvider
 
-            if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && DocumentsContract.isDocumentUri(context, uri)) {
+        if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && DocumentsContract.isDocumentUri(context, uri)) {
 
-                // ExternalStorageProvider
-                if (isExternalStorageDocument(uri)) {
-                    final String docId = DocumentsContract.getDocumentId(uri);
-                    final String[] split = docId.split(":");
-                    final String type = split[0];
+            // ExternalStorageProvider
+            if (isExternalStorageDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
 
-                    if ("primary".equalsIgnoreCase(type)) {
-                        return Environment.getExternalStorageDirectory() + "/" + split[1];
-                    }
-
-                    // TODO handle non-primary volumes
+                if ("primary".equalsIgnoreCase(type)) {
+                    return Environment.getExternalStorageDirectory() + "/" + split[1];
                 }
-                // DownloadsProvider
-                else if (isDownloadsDocument(uri)) {
 
-                    final String id = DocumentsContract.getDocumentId(uri);
-                    final Uri contentUri = ContentUris.withAppendedId(
-                            Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+                // TODO handle non-primary volumes
+            }
+            // DownloadsProvider
+            else if (isDownloadsDocument(uri)) {
 
-                    return getDataColumn(context, contentUri, null, null);
+                final String id = DocumentsContract.getDocumentId(uri);
+                final Uri contentUri = ContentUris.withAppendedId(
+                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+
+                return getDataColumn(context, contentUri, null, null);
+            }
+            // MediaProvider
+            else if (isMediaDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                Uri contentUri = null;
+                if ("image".equals(type)) {
+                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                } else if ("video".equals(type)) {
+                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                } else if ("audio".equals(type)) {
+                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                 }
-                // MediaProvider
-                else if (isMediaDocument(uri)) {
-                    final String docId = DocumentsContract.getDocumentId(uri);
-                    final String[] split = docId.split(":");
-                    final String type = split[0];
 
-                    Uri contentUri = null;
-                    if ("image".equals(type)) {
-                        contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-                    } else if ("video".equals(type)) {
-                        contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-                    } else if ("audio".equals(type)) {
-                        contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-                    }
+                final String selection = "_id=?";
+                final String[] selectionArgs = new String[] {
+                        split[1]
+                };
 
-                    final String selection = "_id=?";
-                    final String[] selectionArgs = new String[] {
-                            split[1]
-                    };
-
-                    return getDataColumn(context, contentUri, selection, selectionArgs);
-                }
+                return getDataColumn(context, contentUri, selection, selectionArgs);
             }
-            // MediaStore (and general)
-            else if ("content".equalsIgnoreCase(uri.getScheme())) {
+        }
+        // MediaStore (and general)
+        else if ("content".equalsIgnoreCase(uri.getScheme())) {
 
-                // Return the remote address
-                if (isGooglePhotosUri(uri))
-                    return uri.getLastPathSegment();
+            // Return the remote address
+            if (isGooglePhotosUri(uri))
+                return uri.getLastPathSegment();
 
-                return getDataColumn(context, uri, null, null);
-            }
-            // File
-            else if ("file".equalsIgnoreCase(uri.getScheme())) {
-                return uri.getPath();
-            }
+            return getDataColumn(context, uri, null, null);
+        }
+        // File
+        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return uri.getPath();
+        }
 
 
         return null;
