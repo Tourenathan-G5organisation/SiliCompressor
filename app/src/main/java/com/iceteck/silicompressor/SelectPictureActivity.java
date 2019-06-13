@@ -8,7 +8,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -37,7 +36,7 @@ public class SelectPictureActivity extends AppCompatActivity {
 
     public static final String LOG_TAG = SelectPictureActivity.class.getSimpleName();
 
-    public static final String FILE_PROVIDER_AUTHORITY = "com.iceteck.silicompressor.provider";
+    public static final String FILE_PROVIDER_AUTHORITY = ".silicompressor.provider";
     private static final int REQUEST_TAKE_CAMERA_PHOTO = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE_VID = 2;
@@ -181,7 +180,7 @@ public class SelectPictureActivity extends AppCompatActivity {
 
                 // Get the content URI for the image file
                 capturedUri = FileProvider.getUriForFile(this,
-                        FILE_PROVIDER_AUTHORITY,
+                        getPackageName() + FILE_PROVIDER_AUTHORITY,
                         photoFile);
 
                 Log.d(LOG_TAG, "Log1: " + String.valueOf(capturedUri));
@@ -204,7 +203,7 @@ public class SelectPictureActivity extends AppCompatActivity {
                 takeVideoIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 10);
                 takeVideoIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
                 capturedUri = FileProvider.getUriForFile(this,
-                        FILE_PROVIDER_AUTHORITY,
+                        getPackageName() + FILE_PROVIDER_AUTHORITY,
                         createMediaFile(TYPE_VIDEO));
 
                 takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, capturedUri);

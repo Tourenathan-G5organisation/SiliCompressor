@@ -23,7 +23,7 @@
         </activity>
         <provider
             android:name=".provider.GenericFileProvider"
-            android:authorities="com.iceteck.silicompressor.provider"
+            android:authorities="${applicationId}.silicompressor.provider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
