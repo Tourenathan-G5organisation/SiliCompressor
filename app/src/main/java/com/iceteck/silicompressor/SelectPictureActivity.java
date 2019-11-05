@@ -232,12 +232,15 @@ public class SelectPictureActivity extends AppCompatActivity {
 
 
         } else if (requestCode == REQUEST_TAKE_VIDEO && resultCode == RESULT_OK) {
-            if (data.getData() != null) {
+            if (data != null && data.getData() != null) {
                 //create destination directory
                 File f = new File( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES) + "/Silicompressor/videos");
-                if (f.mkdirs() || f.isDirectory())
+                if (f.mkdirs() || f.isDirectory()) {
                     //compress and output new video specs
-                    new VideoCompressAsyncTask(this).execute(mCurrentPhotoPath, f.getPath());
+                    //new VideoCompressAsyncTask(this).execute("true", mCurrentPhotoPath, f.getPath());
+                    Uri videoContentUri = data.getData();
+                    new VideoCompressAsyncTask(this).execute("false", videoContentUri.toString(), f.getPath());
+                }
 
             }
         }
@@ -332,9 +335,24 @@ public class SelectPictureActivity extends AppCompatActivity {
             String filePath = null;
             try {
 
-                filePath = SiliCompressor.with(mContext).compressVideo(paths[0], paths[1]);
+                //This bellow is just a temporary solution to test that method call works
+                boolean b = Boolean.parseBoolean(paths[0]);
+                if (b) {
+                    filePath = SiliCompressor.with(mContext).compressVideo(paths[1], paths[2]);
+                } else {
+                    Uri videoContentUri = Uri.parse(paths[1]);
+                    filePath = SiliCompressor.with(mContext).compressVideo(
+                            videoContentUri,
+                            paths[2],
+                            1280,
+                            720,
+                            1500000);
+                }
+
 
             } catch (URISyntaxException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             return filePath;

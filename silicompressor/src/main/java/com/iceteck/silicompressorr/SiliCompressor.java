@@ -168,6 +168,16 @@ public class SiliCompressor {
         return compressVideo(videoFilePath, destinationDir, 0, 0, 0);
     }
 
+    /**
+     * This method compresses the video using the content uri of the video
+     * @param videoContentUri
+     * @param destinationDir destination directory where converted file should be saved
+     * @return The Path of the compressed video file
+     */
+    public String compressVideo(Uri videoContentUri, String destinationDir) throws URISyntaxException {
+        return compressVideo(videoContentUri, destinationDir, 0, 0, 0);
+    }
+
 
     /**
      * Perform background video compression. Make sure the videofileUri and destinationUri are valid
@@ -191,6 +201,26 @@ public class SiliCompressor {
 
         return MediaController.cachedFile.getPath();
 
+    }
+
+    /**
+     *  This method compresses the video using the content uri of the video
+     * @param videoContentUri
+     * @param destinationDir destination directory where converted file should be saved
+     * @param outWidth       the target width of the compressed video or 0 to use default width
+     * @param outHeight      the target height of the compressed video or 0 to use default height
+     * @param bitrate        the target bitrate of the compressed video or 0 to user default bitrate
+     * @return The Path of the compressed video file
+     */
+    public String compressVideo(Uri videoContentUri, String destinationDir, int outWidth, int outHeight, int bitrate) throws URISyntaxException {
+        boolean isConverted = MediaController.getInstance().convertVideo(mContext, videoContentUri, new File(destinationDir), outWidth, outHeight, bitrate);
+        if (isConverted) {
+            Log.v(LOG_TAG, "Video Conversion Complete");
+        } else {
+            Log.v(LOG_TAG, "Video conversion in progress");
+        }
+
+        return MediaController.cachedFile.getPath();
     }
 
 
