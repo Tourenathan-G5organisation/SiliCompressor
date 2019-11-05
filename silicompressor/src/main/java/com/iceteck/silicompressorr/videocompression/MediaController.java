@@ -399,7 +399,7 @@ public void scheduleVideoConvert(String path, File dest) {
                 }
 
 
-                if (resultWidth != originalWidth || resultHeight != originalHeight) {
+
                     int videoIndex;
                     videoIndex = selectTrack(extractor, false);
 
@@ -730,13 +730,8 @@ public void scheduleVideoConvert(String path, File dest) {
                             encoder.release();
                         }
                     }
-                }
-                else {
-                    long videoTime = readAndWriteTrack(extractor, mediaMuxer, info, startTime, endTime, cacheFile, false);
-                    if (videoTime != -1) {
-                        videoStartTime = videoTime;
-                    }
-                }
+
+
                 if (!error) {
                     readAndWriteTrack(extractor, mediaMuxer, info, videoStartTime, endTime, cacheFile, true);
                 }
