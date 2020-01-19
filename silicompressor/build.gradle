@@ -3,15 +3,15 @@ apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'com.iceteck.silicompressorr'
-version = '2.2.2'
+version = '2.2.3'
 
 android {
     compileSdkVersion 28
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 28
-        versionCode 7
-        versionName "2.2.2"
+        versionCode 8
+        versionName "2.2.3"
     }
     buildTypes {
         release {
@@ -44,7 +44,7 @@ ext {
     siteUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor'
     gitUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor.git'
 
-    libraryVersion = '2.2.2'
+    libraryVersion = '2.2.3'
 
     developerId = 'tourenathan'
     developerName = 'TEYOU TOURE NATHAN'
