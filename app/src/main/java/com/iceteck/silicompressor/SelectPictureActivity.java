@@ -341,12 +341,16 @@ public class SelectPictureActivity extends AppCompatActivity {
                     filePath = SiliCompressor.with(mContext).compressVideo(paths[1], paths[2]);
                 } else {
                     Uri videoContentUri = Uri.parse(paths[1]);
-                    filePath = SiliCompressor.with(mContext).compressVideo(
+                    // Example using the bitrate and video size parameters
+                    /*filePath = SiliCompressor.with(mContext).compressVideo(
                             videoContentUri,
                             paths[2],
                             1280,
                             720,
-                            1500000);
+                            1500000);*/
+                    filePath = SiliCompressor.with(mContext).compressVideo(
+                            videoContentUri,
+                            paths[2]);
                 }
 
 
