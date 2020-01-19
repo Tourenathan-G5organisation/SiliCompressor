@@ -7,12 +7,14 @@ package com.iceteck.silicompressorr.videocompression;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 
@@ -257,6 +259,43 @@ public void scheduleVideoConvert(String path, File dest) {
 
     /**
      * Perform the actual video compression. Processes the frames and does the magic
+     * Width, height and bitrate are now default
+     * @param context Context will be used in some method calls as argument
+     * @param videoContentUri Uri will be used in some method calls as argument
+     * @param destDir the destination directory where compressed video is eventually saved
+     * @return
+     */
+    public boolean convertVideo(Context context, Uri videoContentUri, File destDir) {
+        return convertVideo(context, videoContentUri, destDir, 0, 0, 0);
+    }
+
+    /**
+     * This is just a wrapper to call the private method convertVideo with the RIGHT arguments
+     * Perform the actual video compression. Processes the frames and does the magic
+     * Width, height and bitrate are now default
+     * @param sourcePath the source uri for the file as per
+     * @param destDir the destination directory where compressed video is eventually saved
+     * @return
+     */
+    public boolean convertVideo(final String sourcePath, File destDir, int outWidth, int outHeight, int outBitrate) {
+        return convertVideo(null, null, sourcePath, destDir, outWidth, outHeight, outBitrate);
+    }
+
+    /**
+     * This is just a wrapper to call the private method convertVideo with the RIGHT arguments
+     * Perform the actual video compression. Processes the frames and does the magic
+     * Width, height and bitrate are now default
+     * @param context Context will be used in some method calls as argument
+     * @param videoContentUri Uri will be used in some method calls as argument
+     * @param destDir the destination directory where compressed video is eventually saved
+     * @return
+     */
+    public boolean convertVideo(Context context, Uri videoContentUri, File destDir, int outWidth, int outHeight, int outBitrate) {
+        return convertVideo(context, videoContentUri, null, destDir, outWidth, outHeight, outBitrate);
+    }
+
+    /**
+     * Perform the actual video compression. Processes the frames and does the magic
      * @param sourcePath the source uri for the file as per
      * @param destDir the destination directory where compressed video is eventually saved
      * @param outWidth the target width of the converted video, 0 is default
@@ -265,11 +304,18 @@ public void scheduleVideoConvert(String path, File dest) {
      * @return
      */
     @TargetApi(16)
-    public boolean  convertVideo(final String sourcePath, File destDir, int outWidth, int outHeight, int outBitrate) {
-        this.path=sourcePath;
-
+    private boolean  convertVideo(Context context, Uri videoContentUri, final String sourcePath, File destDir, int outWidth, int outHeight, int outBitrate) {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(path);
+
+        if (sourcePath != null) {
+            this.path=sourcePath;
+            retriever.setDataSource(path);
+        } else if (context != null && videoContentUri != null) {
+            retriever.setDataSource(context, videoContentUri);
+        } else {
+            return false;
+        }
+
         String width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
         String height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
         String rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
@@ -316,11 +362,13 @@ public void scheduleVideoConvert(String path, File dest) {
             }
         }
 
-
-        File inputFile = new File(path);
-        if (!inputFile.canRead()) {
-            didWriteData(true, true);
-            return false;
+        File inputFile = null;
+        if (sourcePath != null) {
+            inputFile = new File(path);
+            if (!inputFile.canRead()) {
+                didWriteData(true, true);
+                return false;
+            }
         }
 
         videoConvertFirstWrite = true;
@@ -341,10 +389,17 @@ public void scheduleVideoConvert(String path, File dest) {
                 movie.setSize(resultWidth, resultHeight);
                 mediaMuxer = new MP4Builder().createMovie(movie);
                 extractor = new MediaExtractor();
-                extractor.setDataSource(inputFile.toString());
+
+                if (sourcePath != null && inputFile != null) {
+                    extractor.setDataSource(inputFile.toString());
+                } else if (context != null && videoContentUri != null) {
+                    extractor.setDataSource(context, videoContentUri, null);
+                } else {
+                    return false;
+                }
 
 
-                if (resultWidth != originalWidth || resultHeight != originalHeight) {
+
                     int videoIndex;
                     videoIndex = selectTrack(extractor, false);
 
@@ -675,12 +730,8 @@ public void scheduleVideoConvert(String path, File dest) {
                             encoder.release();
                         }
                     }
-                } else {
-                    long videoTime = readAndWriteTrack(extractor, mediaMuxer, info, startTime, endTime, cacheFile, false);
-                    if (videoTime != -1) {
-                        videoStartTime = videoTime;
-                    }
-                }
+
+
                 if (!error) {
                     readAndWriteTrack(extractor, mediaMuxer, info, videoStartTime, endTime, cacheFile, true);
                 }
@@ -720,7 +771,9 @@ public void scheduleVideoConvert(String path, File dest) {
         //inputFile.delete();
         Log.e("ViratPath",path+"");
         Log.e("ViratPath",cacheFile.getPath()+"");
-        Log.e("ViratPath",inputFile.getPath()+"");
+        if (inputFile != null) {
+            Log.e("ViratPath", inputFile.getPath() + "");
+        }
 
 
        /* Log.e("ViratPath",path+"");
