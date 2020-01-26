@@ -405,7 +405,7 @@ public class SiliCompressor {
             //  write the compressed bitmap at the destination specified by filename.
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
             out.close();
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -437,10 +437,13 @@ public class SiliCompressor {
                     ".jpg",         /* suffix */
                     storageDir      /* directory */
             );
-            FileOutputStream out = new FileOutputStream(image);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-            out.close();
-
+            try {
+                FileOutputStream out = new FileOutputStream(image);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             // Compress the new file
             Uri copyImageUri = FileProvider.getUriForFile(mContext, getAuthorities(mContext), image);
 
