@@ -259,9 +259,15 @@ public class SiliCompressor {
         /*if (Pattern.matches("^[.][p][n][g]", filename)){
             ext = ".png";
         }*/
+        String nameFirstPart = file.getAbsolutePath() + "/IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) ;
+        String nameFull = nameFirstPart + ext;
+        int x = 1;
+        while (new File(nameFull).exists()){
+            nameFull = nameFirstPart + "_" + x + ext;
+            x++;
+        }
 
-        return (file.getAbsolutePath() + "/IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ext);
-
+        return nameFull;
     }
 
     /**
