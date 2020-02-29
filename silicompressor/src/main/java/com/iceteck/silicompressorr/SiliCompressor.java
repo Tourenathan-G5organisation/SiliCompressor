@@ -260,9 +260,15 @@ public class SiliCompressor {
         /*if (Pattern.matches("^[.][p][n][g]", filename)){
             ext = ".png";
         }*/
+        String nameFirstPart = file.getAbsolutePath() + "/IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) ;
+        String nameFull = nameFirstPart + ext;
+        int x = 1;
+        while (new File(nameFull).exists()){
+            nameFull = nameFirstPart + "_" + x + ext;
+            x++;
+        }
 
-        return (file.getAbsolutePath() + "/IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ext);
-
+        return nameFull;
     }
 
     /**
@@ -405,8 +411,8 @@ public class SiliCompressor {
 
             //  write the compressed bitmap at the destination specified by filename.
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
-
-        } catch (FileNotFoundException e) {
+            out.close();
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -438,9 +444,13 @@ public class SiliCompressor {
                     ".jpg",         /* suffix */
                     storageDir      /* directory */
             );
-            FileOutputStream out = new FileOutputStream(image);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-
+            try {
+                FileOutputStream out = new FileOutputStream(image);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             // Compress the new file
             Uri copyImageUri = FileProvider.getUriForFile(mContext, getAuthorities(mContext), image);
 
