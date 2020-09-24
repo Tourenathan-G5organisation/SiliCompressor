@@ -14,24 +14,26 @@
     tools:context="com.iceteck.silicompressor.SelectPictureActivity"
     tools:showIn="@layout/activity_select_picture">
 
-    <LinearLayout android:layout_width="match_parent"
+    <LinearLayout
+        android:id="@+id/picture_layout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
         android:layout_gravity="center_horizontal"
         android:layout_weight="1"
-        android:orientation="vertical"
-        android:id="@+id/picture_layout">
+        android:gravity="center"
+        android:orientation="vertical">
+
         <ImageView
+            android:id="@+id/photo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_photo_camera_white_48px"
-            android:id="@+id/photo"
-            />
+            android:src="@drawable/ic_photo_camera_white_48px" />
+
         <ImageView
             android:id="@+id/videoImageView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_videocam_grey_700_48dp"/>
+            android:src="@drawable/ic_videocam_grey_700_48dp" />
     </LinearLayout>
 
 

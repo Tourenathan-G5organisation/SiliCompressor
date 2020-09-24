@@ -5,18 +5,27 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import com.iceteck.silicompressorr.SiliCompressor;
 
@@ -27,11 +36,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
+import static android.os.Environment.getExternalStoragePublicDirectory;
 
 public class SelectPictureActivity extends AppCompatActivity {
 
@@ -60,24 +65,14 @@ public class SelectPictureActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        imageView = (ImageView) findViewById(R.id.photo);
-        videoImageView = (ImageView) findViewById(R.id.videoImageView);
-        picDescription = (TextView) findViewById(R.id.pic_description);
-        compressionMsg = (LinearLayout) findViewById(R.id.compressionMsg);
+        imageView = findViewById(R.id.photo);
+        videoImageView = findViewById(R.id.videoImageView);
+        picDescription = findViewById(R.id.pic_description);
+        compressionMsg = findViewById(R.id.compressionMsg);
 
-        imageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                requestPermissions(TYPE_IMAGE);
-            }
-        });
+        imageView.setOnClickListener(v -> requestPermissions(TYPE_IMAGE));
 
-        videoImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                requestPermissions(TYPE_VIDEO);
-            }
-        });
+        videoImageView.setOnClickListener(view -> requestPermissions(TYPE_VIDEO));
     }
 
     /**
@@ -143,7 +138,7 @@ public class SelectPictureActivity extends AppCompatActivity {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String fileName = (type == TYPE_IMAGE) ? "JPEG_" + timeStamp + "_" : "VID_" + timeStamp + "_";
-        File storageDir = Environment.getExternalStoragePublicDirectory(
+        File storageDir = getExternalFilesDir(
                 type == TYPE_IMAGE ? Environment.DIRECTORY_PICTURES : Environment.DIRECTORY_MOVIES);
         File file = File.createTempFile(
                 fileName,  /* prefix */
@@ -164,7 +159,8 @@ public class SelectPictureActivity extends AppCompatActivity {
 
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
+        takePictureIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        takePictureIntent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             // Create the File where the photo should go
@@ -172,6 +168,7 @@ public class SelectPictureActivity extends AppCompatActivity {
             try {
                 photoFile = createMediaFile(TYPE_IMAGE);
             } catch (IOException ex) {
+                ex.printStackTrace();
                 // Error occurred while creating the File
                 Log.d(LOG_TAG, "Error occurred while creating the file");
 
@@ -227,15 +224,14 @@ public class SelectPictureActivity extends AppCompatActivity {
         //verify if the image was gotten successfully
         if (requestCode == REQUEST_TAKE_CAMERA_PHOTO && resultCode == Activity.RESULT_OK) {
 
-
-            new ImageCompressionAsyncTask(this).execute(mCurrentPhotoPath,
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Silicompressor/images");
+            new ImageCompressionAsyncTask(this).execute(capturedUri.toString(),
+                    getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Silicompressor/images");
 
 
         } else if (requestCode == REQUEST_TAKE_VIDEO && resultCode == RESULT_OK) {
             if (data != null && data.getData() != null) {
                 //create destination directory
-                File f = new File( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES) + "/Silicompressor/videos");
+                File f = new File(getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES) + "/Silicompressor/videos");
                 if (f.mkdirs() || f.isDirectory()) {
                     //compress and output new video specs
                     //new VideoCompressAsyncTask(this).execute("true", mCurrentPhotoPath, f.getPath());
@@ -259,49 +255,31 @@ public class SelectPictureActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... params) {
 
-            String filePath = SiliCompressor.with(mContext).compress(params[0], new File(params[1]));
-            return filePath;
+            return SiliCompressor.with(mContext).compress(params[0], new File(params[1]));
 
-
-            /*
-            Bitmap compressBitMap = null;
-            try {
-                compressBitMap = SiliCompressor.with(mContext).getCompressBitmap(params[0], true);
-                return compressBitMap;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return compressBitMap;
-
-            */
         }
 
         @Override
         protected void onPostExecute(String s) {
-            /*
-            if (null != s){
-                imageView.setImageBitmap(s);
-                int compressHieght = s.getHeight();
-                int compressWidth = s.getWidth();
-                float length = s.getByteCount() / 1024f; // Size in KB;
 
-                String text = String.format("Name: %s\nSize: %fKB\nWidth: %d\nHeight: %d", "ff", length, compressWidth, compressHieght);
-                picDescription.setVisibility(View.VISIBLE);
-                picDescription.setText(text);
+            float length = 0;
+            String name;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                compressUri = Uri.parse(s);
+                Cursor c = getContentResolver().query(compressUri, null, null, null, null);
+                c.moveToFirst();
+                name = c.getString(c.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                length = c.getLong(c.getColumnIndex(OpenableColumns.SIZE)) / 1024;
+            } else {
+                File imageFile = new File(s);
+                compressUri = Uri.fromFile(imageFile);
+                name = imageFile.getName();
+                length = imageFile.length() / 1024f; // Size in KB
             }
-            */
-
-            File imageFile = new File(s);
-            compressUri = Uri.fromFile(imageFile);
-            //FileProvider.getUriForFile(mContext, mContext.getApplicationContext().getPackageName()+ FILE_PROVIDER_EXTENTION, imageFile);
-
 
             try {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), compressUri);
                 imageView.setImageBitmap(bitmap);
-
-                String name = imageFile.getName();
-                float length = imageFile.length() / 1024f; // Size in KB
                 int compressWidth = bitmap.getWidth();
                 int compressHieght = bitmap.getHeight();
                 String text = String.format(Locale.US, "Name: %s\nSize: %fKB\nWidth: %d\nHeight: %d", name, length, compressWidth, compressHieght);

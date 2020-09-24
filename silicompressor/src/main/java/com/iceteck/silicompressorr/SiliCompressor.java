@@ -1,17 +1,21 @@
 package com.iceteck.silicompressorr;
 
+import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
+import androidx.exifinterface.media.ExifInterface;
 
 import com.iceteck.silicompressorr.videocompression.MediaController;
 
@@ -19,23 +23,21 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import androidx.annotation.NonNull;
-import androidx.core.content.FileProvider;
-
 /**
  * @author Toure, Akah L
- * @version 1.1.1
  * Created by Toure on 28/03/2016.
  */
 public class SiliCompressor {
 
     private static final String LOG_TAG = SiliCompressor.class.getSimpleName();
     public static String videoCompressionPath;
+    private static final String IMAGE_DESTINATION = "Silicompressor/images";
 
     static volatile SiliCompressor singleton = null;
     private static Context mContext;
@@ -59,35 +61,26 @@ public class SiliCompressor {
     }
 
     /**
-     * Compress the image at with the specified path and return the filepath of the compressed image.
+     * Deletes image file for a given path.
      *
-     * @param imagePath   The path of the image you wish to compress.
-     * @param destination The destination directory where the compressed image will be stored.
-     * @return filepath  The path of the compressed image file
+     * @param imageUri The path of the photo to be deleted.
+     * @return True if the file is deleted and False otherwise
      */
-    public String compress(String imagePath, File destination) {
-        return compressImage(imagePath, destination);
+    private static boolean deleteImageFile(String imageUri) {
+        Uri uri = Uri.parse(imageUri);
+        int cnt = mContext.getContentResolver().delete(uri, null, null);
+        return cnt > 0;
     }
 
     /**
      * Compress the image at with the specified path and return the filepath of the compressed image.
      *
-     * @param imagePath         The path of the image you wish to compress.
-     * @param destination       The destination directory where the compressed image will be stored.
-     * @param deleteSourceImage if True will delete the original file
+     * @param uriString   The uriString of the image file you wish to compress.
+     * @param destination The destination directory where the compressed image will be stored.
      * @return filepath  The path of the compressed image file
      */
-    public String compress(String imagePath, File destination, boolean deleteSourceImage) {
-
-        String compressedImagePath = compressImage(imagePath, destination);
-
-        if (deleteSourceImage) {
-            boolean isdeleted = deleteImageFile(imagePath);
-            Log.d(LOG_TAG, (isdeleted) ? "Source image file deleted" : "Error: Source image file not deleted.");
-
-        }
-
-        return compressedImagePath;
+    public String compress(String uriString, File destination) {
+        return compressImage(uriString, destination);
     }
 
     static String getAuthorities(@NonNull Context context) {
@@ -110,49 +103,51 @@ public class SiliCompressor {
     }
 
     /**
-     * Compress the image at with the specified path and return the bitmap data of the compressed image.
+     * Compress the image at with the specified path and return the filepath of the compressed image.
      *
-     * @param imagePath         The path of the image file you wish to compress.
-     * @param deleteSourceImage If True will delete the source file
-     * @return Compress image bitmap
-     * @throws IOException
+     * @param uriString         The uriString of the image file you wish to compress.
+     * @param destination       The destination directory where the compressed image will be stored.
+     * @param deleteSourceImage if True will delete the original file
+     * @return filepath  The path of the compressed image file
      */
-    public Bitmap getCompressBitmap(String imagePath, boolean deleteSourceImage) throws IOException {
-        File imageFile = new File(compressImage(imagePath, new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Silicompressor/images")));
-        Uri newImageUri = FileProvider.getUriForFile(mContext, getAuthorities(mContext), imageFile);
+    public String compress(String uriString, File destination, boolean deleteSourceImage) {
 
-        Bitmap bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), newImageUri);
+        String compressedImagePath = compressImage(uriString, destination);
 
         if (deleteSourceImage) {
-            boolean isdeleted = deleteImageFile(imagePath);
+            boolean isdeleted = deleteImageFile(uriString);
             Log.d(LOG_TAG, (isdeleted) ? "Source image file deleted" : "Error: Source image file not deleted.");
 
         }
 
-        // Delete the file created during the image compression
-        deleteImageFile(imageFile.getAbsolutePath());
-
-        // Return the required bitmap
-        return bitmap;
+        return compressedImagePath;
     }
 
     /**
-     * Deletes image file for a given path.
+     * Compress the image at with the specified path and return the bitmap data of the compressed image.
      *
-     * @param imagePath The path of the photo to be deleted.
-     * @return True if the file is deleted and False otherwise
+     * @param imageUri          The String uri of the image file you wish to compress.
+     * @param deleteSourceImage If True will delete the source file
+     * @return Compress image bitmap
+     * @throws IOException
      */
-    private static boolean deleteImageFile(String imagePath) {
-        // Get the file
-        File imageFile = new File(imagePath);
+    public Bitmap getCompressBitmap(String imageUri, boolean deleteSourceImage) throws IOException {
 
-        boolean deleted = false;
-        // Delete the image
-        if (imageFile.exists()) {
-            deleted = imageFile.delete();
+        String compressedImageUriString = compressImage(imageUri, new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), IMAGE_DESTINATION));
+        Bitmap bitmap = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), Uri.parse(compressedImageUriString));
+        } else {
+            bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), Uri.fromFile(new File(compressedImageUriString)));
         }
 
-        return deleted;
+        if (deleteSourceImage) {
+            boolean isdeleted = deleteImageFile(imageUri);
+            Log.d(LOG_TAG, (isdeleted) ? "Source image file deleted" : "Error: Source image file not deleted.");
+        }
+
+        // Return the required bitmap
+        return bitmap;
     }
 
     /**
@@ -272,151 +267,142 @@ public class SiliCompressor {
     }
 
     /**
-     * Gets a valid path from the supply contentURI
-     *
-     * @param contentURI
-     * @return A validPath of the image
-     */
-    private String getRealPathFromURI(String contentURI) {
-        Uri contentUri = Uri.parse(contentURI);
-        Cursor cursor = mContext.getContentResolver().query(contentUri, null, null, null, null);
-        if (cursor == null) {
-            return contentUri.getPath();
-        } else {
-            cursor.moveToFirst();
-            int index = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-            Log.e(LOG_TAG, String.format("%d", index));
-
-            String str = cursor.getString(index);
-            cursor.close();
-            return str;
-        }
-
-
-    }
-
-    /**
      * Does the actual image compression
      *
-     * @param imagePath     The path of the image file you wish to compress.
+     * @param uriString     The uriString of the image file you wish to compress.
      * @param destDirectory destination directory where the compressed image will be stored.
      * @return The path of the compressed image file
      */
-    private String compressImage(String imagePath, File destDirectory) {
+    private String compressImage(String uriString, File destDirectory) {
+        try {
+            Uri imageUri = Uri.parse(uriString);
+            Bitmap scaledBitmap = null;
 
-        Bitmap scaledBitmap = null;
+            BitmapFactory.Options options = new BitmapFactory.Options();
 
-        BitmapFactory.Options options = new BitmapFactory.Options();
+            // by setting this field as true, the actual bitmap pixels are not loaded in the memory. Just the bounds are loaded. If
+            // you try the use the bitmap here, you will get null.
+            options.inJustDecodeBounds = true;
+            Bitmap bmp = BitmapFactory.decodeStream(mContext.getContentResolver().openInputStream(imageUri), null, options);
 
-//      by setting this field as true, the actual bitmap pixels are not loaded in the memory. Just the bounds are loaded. If
-//      you try the use the bitmap here, you will get null.
-        options.inJustDecodeBounds = true;
-        Bitmap bmp = BitmapFactory.decodeFile(imagePath, options);
+            int actualHeight = options.outHeight;
+            int actualWidth = options.outWidth;
 
-        int actualHeight = options.outHeight;
-        int actualWidth = options.outWidth;
+            // max Height and width values of the compressed image is taken as 816x612
+            float maxHeight = 816.0f;
+            float maxWidth = 612.0f;
+            float imgRatio = actualWidth / actualHeight;
+            float maxRatio = maxWidth / maxHeight;
 
-//      max Height and width values of the compressed image is taken as 816x612
+            // width and height values are set maintaining the aspect ratio of the image
 
-        float maxHeight = 816.0f;
-        float maxWidth = 612.0f;
-        float imgRatio = actualWidth / actualHeight;
-        float maxRatio = maxWidth / maxHeight;
+            if (actualHeight > maxHeight || actualWidth > maxWidth) {
+                if (imgRatio < maxRatio) {
+                    imgRatio = maxHeight / actualHeight;
+                    actualWidth = (int) (imgRatio * actualWidth);
+                    actualHeight = (int) maxHeight;
+                } else if (imgRatio > maxRatio) {
+                    imgRatio = maxWidth / actualWidth;
+                    actualHeight = (int) (imgRatio * actualHeight);
+                    actualWidth = (int) maxWidth;
+                } else {
+                    actualHeight = (int) maxHeight;
+                    actualWidth = (int) maxWidth;
 
-//      width and height values are set maintaining the aspect ratio of the image
-
-        if (actualHeight > maxHeight || actualWidth > maxWidth) {
-            if (imgRatio < maxRatio) {
-                imgRatio = maxHeight / actualHeight;
-                actualWidth = (int) (imgRatio * actualWidth);
-                actualHeight = (int) maxHeight;
-            } else if (imgRatio > maxRatio) {
-                imgRatio = maxWidth / actualWidth;
-                actualHeight = (int) (imgRatio * actualHeight);
-                actualWidth = (int) maxWidth;
-            } else {
-                actualHeight = (int) maxHeight;
-                actualWidth = (int) maxWidth;
-
+                }
             }
-        }
 
-//      setting inSampleSize value allows to load a scaled down version of the original image
+            // setting inSampleSize value allows to load a scaled down version of the original image
+            options.inSampleSize = calculateInSampleSize(options, actualWidth, actualHeight);
 
-        options.inSampleSize = calculateInSampleSize(options, actualWidth, actualHeight);
+            // inJustDecodeBounds set to false to load the actual bitmap
+            options.inJustDecodeBounds = false;
 
-//      inJustDecodeBounds set to false to load the actual bitmap
-        options.inJustDecodeBounds = false;
+            // this options allow android to claim the bitmap memory if it runs low on memory
+            options.inPurgeable = true;
+            options.inInputShareable = true;
+            options.inTempStorage = new byte[16 * 1024];
 
-//      this options allow android to claim the bitmap memory if it runs low on memory
-        options.inPurgeable = true;
-        options.inInputShareable = true;
-        options.inTempStorage = new byte[16 * 1024];
-
-        try {
-//          load the bitmap from its path
-            bmp = BitmapFactory.decodeFile(imagePath, options);
-        } catch (OutOfMemoryError exception) {
-            exception.printStackTrace();
-
-        }
-        try {
+            // load the bitmap from its path
+            bmp = BitmapFactory.decodeStream(mContext.getContentResolver().openInputStream(imageUri), null, options);
             scaledBitmap = Bitmap.createBitmap(actualWidth, actualHeight, Bitmap.Config.ARGB_8888);
-        } catch (OutOfMemoryError exception) {
-            exception.printStackTrace();
-        }
 
-        float ratioX = actualWidth / (float) options.outWidth;
-        float ratioY = actualHeight / (float) options.outHeight;
-        float middleX = actualWidth / 2.0f;
-        float middleY = actualHeight / 2.0f;
 
-        Matrix scaleMatrix = new Matrix();
-        scaleMatrix.setScale(ratioX, ratioY, middleX, middleY);
+            float ratioX = actualWidth / (float) options.outWidth;
+            float ratioY = actualHeight / (float) options.outHeight;
+            float middleX = actualWidth / 2.0f;
+            float middleY = actualHeight / 2.0f;
 
-        Canvas canvas = new Canvas(scaledBitmap);
-        canvas.setMatrix(scaleMatrix);
-        canvas.drawBitmap(bmp, middleX - bmp.getWidth() / 2, middleY - bmp.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
+            Matrix scaleMatrix = new Matrix();
+            scaleMatrix.setScale(ratioX, ratioY, middleX, middleY);
 
-//      check the rotation of the image and display it properly
-        ExifInterface exif;
-        try {
-            exif = new ExifInterface(imagePath);
+            Canvas canvas = new Canvas(scaledBitmap);
+            canvas.setMatrix(scaleMatrix);
+            canvas.drawBitmap(bmp, middleX - bmp.getWidth() / 2, middleY - bmp.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
 
-            int orientation = exif.getAttributeInt(
-                    ExifInterface.TAG_ORIENTATION, 0);
-            Log.d("EXIF", "Exif: " + orientation);
-            Matrix matrix = new Matrix();
-            if (orientation == 6) {
-                matrix.postRotate(90);
+            // check the rotation of the image and display it properly
+            androidx.exifinterface.media.ExifInterface exif;
+            try {
+                exif = new ExifInterface(mContext.getContentResolver().openInputStream(imageUri));
+
+                int orientation = exif.getAttributeInt(
+                        ExifInterface.TAG_ORIENTATION, 0);
                 Log.d("EXIF", "Exif: " + orientation);
-            } else if (orientation == 3) {
-                matrix.postRotate(180);
-                Log.d("EXIF", "Exif: " + orientation);
-            } else if (orientation == 8) {
-                matrix.postRotate(270);
-                Log.d("EXIF", "Exif: " + orientation);
+                Matrix matrix = new Matrix();
+                if (orientation == 6) {
+                    matrix.postRotate(90);
+                    Log.d("EXIF", "Exif: " + orientation);
+                } else if (orientation == 3) {
+                    matrix.postRotate(180);
+                    Log.d("EXIF", "Exif: " + orientation);
+                } else if (orientation == 8) {
+                    matrix.postRotate(270);
+                    Log.d("EXIF", "Exif: " + orientation);
+                }
+                scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0,
+                        scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix,
+                        true);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0,
-                    scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix,
-                    true);
-        } catch (IOException e) {
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+
+                String fileName = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".jpg";
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
+                values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+                values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/SiliCompressor/");
+                values.put(MediaStore.Images.Media.IS_PENDING, 1);
+
+                Uri collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+                Uri resultUri = mContext.getContentResolver().insert(collection, values);
+
+                OutputStream out = mContext.getContentResolver().openOutputStream(resultUri);
+
+                // write the compressed bitmap at the destination specified by filename.
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+                values.clear();
+                values.put(MediaStore.Images.Media.IS_PENDING, 0);
+                mContext.getContentResolver().update(resultUri, values, null, null);
+
+                return resultUri.toString();
+
+            } else {
+                String filename = getFilename(uriString, destDirectory);
+
+                FileOutputStream out = new FileOutputStream(filename);
+
+                //write the compressed bitmap at the destination specified by filename.
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+
+                return filename;
+            }
+
+        } catch (FileNotFoundException | OutOfMemoryError e) {
             e.printStackTrace();
+            return null;
         }
-
-        FileOutputStream out;
-        String resultFilePath = getFilename(imagePath, destDirectory);
-        try {
-            out = new FileOutputStream(resultFilePath);
-
-            //  write the compressed bitmap at the destination specified by filename.
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return resultFilePath;
 
     }
 
@@ -427,42 +413,42 @@ public class SiliCompressor {
      * @return The path to the compressed file or null if the could not access drawable file
      * @throws IOException
      */
-    public String compress(int drawableID) throws IOException {
+    public String compress(int drawableID) {
+        try {
+            // Create a bitmap from this drawable
+            Bitmap bitmap = BitmapFactory.decodeResource(mContext.getApplicationContext().getResources(), drawableID);
+            if (null != bitmap) {
+                // Create a file from the bitmap
 
-        // Create a bitmap from this drawable
-        Bitmap bitmap = BitmapFactory.decodeResource(mContext.getApplicationContext().getResources(), drawableID);
-        if (null != bitmap) {
-            // Create a file from the bitmap
+                // Create an image file name
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ENGLISH).format(new Date());
+                String imageFileName = "JPEG_" + timeStamp + "_";
+                File storageDir = mContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                File image = File.createTempFile(
+                        imageFileName,  /* prefix */
+                        ".jpg",         /* suffix */
+                        storageDir      /* directory */
+                );
 
-            // Create an image file name
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ENGLISH).format(new Date());
-            String imageFileName = "JPEG_" + timeStamp + "_";
-            File storageDir = Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_PICTURES);
-            File image = File.createTempFile(
-                    imageFileName,  /* prefix */
-                    ".jpg",         /* suffix */
-                    storageDir      /* directory */
-            );
-            try {
                 FileOutputStream out = new FileOutputStream(image);
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
                 out.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+
+                // Compress the new file
+                Uri copyImageUri = FileProvider.getUriForFile(mContext, getAuthorities(mContext), image);
+
+                String compressedImagePath = compressImage(copyImageUri.toString(), new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), IMAGE_DESTINATION));
+
+                // Delete the file created from the drawable Id
+                if (image.exists()) {
+                    deleteImageFile(copyImageUri.toString());
+                }
+
+                // return the path to the compressed image
+                return compressedImagePath;
             }
-            // Compress the new file
-            Uri copyImageUri = FileProvider.getUriForFile(mContext, getAuthorities(mContext), image);
-
-            String compressedImagePath = compressImage(image.getAbsolutePath(), new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Silicompressor/images"));
-
-            // Delete the file created from the drawable Id
-            if (image.exists()) {
-                deleteImageFile(image.getAbsolutePath());
-            }
-
-            // return the path to the compressed image
-            return compressedImagePath;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         return null;
