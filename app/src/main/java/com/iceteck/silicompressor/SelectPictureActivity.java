@@ -181,10 +181,9 @@ public class SelectPictureActivity extends AppCompatActivity {
                         getPackageName() + FILE_PROVIDER_AUTHORITY,
                         photoFile);
 
-                Log.d(LOG_TAG, "Log1: " + String.valueOf(capturedUri));
+                Log.d(LOG_TAG, "Log1: " + capturedUri);
 
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, capturedUri);
-
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_CAMERA_PHOTO);
 
             }
@@ -195,6 +194,8 @@ public class SelectPictureActivity extends AppCompatActivity {
     private void dispatchTakeVideoIntent() {
         Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         takeVideoIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        takeVideoIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        takeVideoIntent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         if (takeVideoIntent.resolveActivity(getPackageManager()) != null) {
             try {
 
@@ -235,8 +236,7 @@ public class SelectPictureActivity extends AppCompatActivity {
                 if (f.mkdirs() || f.isDirectory()) {
                     //compress and output new video specs
                     //new VideoCompressAsyncTask(this).execute("true", mCurrentPhotoPath, f.getPath());
-                    Uri videoContentUri = data.getData();
-                    new VideoCompressAsyncTask(this).execute("false", videoContentUri.toString(), f.getPath());
+                    new VideoCompressAsyncTask(this.getApplicationContext()).execute("false", capturedUri.toString(), f.getPath());
                 }
 
             }
@@ -264,7 +264,7 @@ public class SelectPictureActivity extends AppCompatActivity {
 
             float length = 0;
             String name;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 compressUri = Uri.parse(s);
                 Cursor c = getContentResolver().query(compressUri, null, null, null, null);
                 c.moveToFirst();
@@ -346,14 +346,14 @@ public class SelectPictureActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String compressedFilePath) {
             super.onPostExecute(compressedFilePath);
+
             File imageFile = new File(compressedFilePath);
+            compressUri = Uri.fromFile(imageFile);
+            String name = imageFile.getName();
             float length = imageFile.length() / 1024f; // Size in KB
-            String value;
-            if (length >= 1024)
-                value = length / 1024f + " MB";
-            else
-                value = length + " KB";
-            String text = String.format(Locale.US, "%s\nName: %s\nSize: %s", getString(R.string.video_compression_complete), imageFile.getName(), value);
+
+            String value = length + " KB";
+            String text = String.format(Locale.US, "%s\nName: %s\nSize: %s", getString(R.string.video_compression_complete), name, value);
             compressionMsg.setVisibility(View.GONE);
             picDescription.setVisibility(View.VISIBLE);
             picDescription.setText(text);

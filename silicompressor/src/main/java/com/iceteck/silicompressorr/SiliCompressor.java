@@ -83,7 +83,7 @@ public class SiliCompressor {
         return compressImage(uriString, destination);
     }
 
-    static String getAuthorities(@NonNull Context context) {
+    protected static String getAuthorities(@NonNull Context context) {
         return context.getPackageName() + FILE_PROVIDER_AUTHORITY;
     }
 
@@ -135,7 +135,7 @@ public class SiliCompressor {
 
         String compressedImageUriString = compressImage(imageUri, new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), IMAGE_DESTINATION));
         Bitmap bitmap = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), Uri.parse(compressedImageUriString));
         } else {
             bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), Uri.fromFile(new File(compressedImageUriString)));
@@ -166,8 +166,9 @@ public class SiliCompressor {
 
     /**
      * This method compresses the video using the content uri of the video
+     *
      * @param videoContentUri
-     * @param destinationDir destination directory where converted file should be saved
+     * @param destinationDir  destination directory where converted file should be saved
      * @return The Path of the compressed video file
      */
     public String compressVideo(Uri videoContentUri, String destinationDir) throws URISyntaxException {
@@ -188,7 +189,7 @@ public class SiliCompressor {
      * @return The Path of the compressed video file
      */
     public String compressVideo(String videoFilePath, String destinationDir, int outWidth, int outHeight, int bitrate) throws URISyntaxException {
-        boolean isconverted = MediaController.getInstance().convertVideo(videoFilePath, new File(destinationDir), outWidth, outHeight, bitrate);
+        boolean isconverted = MediaController.getInstance(mContext).convertVideo(videoFilePath, new File(destinationDir), outWidth, outHeight, bitrate);
         if (isconverted) {
             Log.v(LOG_TAG, "Video Conversion Complete");
         } else {
@@ -200,16 +201,17 @@ public class SiliCompressor {
     }
 
     /**
-     *  This method compresses the video using the content uri of the video
+     * This method compresses the video using the content uri of the video
+     *
      * @param videoContentUri
-     * @param destinationDir destination directory where converted file should be saved
-     * @param outWidth       the target width of the compressed video or 0 to use default width
-     * @param outHeight      the target height of the compressed video or 0 to use default height
-     * @param bitrate        the target bitrate of the compressed video or 0 to user default bitrate
+     * @param destinationDir  destination directory where converted file should be saved
+     * @param outWidth        the target width of the compressed video or 0 to use default width
+     * @param outHeight       the target height of the compressed video or 0 to use default height
+     * @param bitrate         the target bitrate of the compressed video or 0 to user default bitrate
      * @return The Path of the compressed video file
      */
     public String compressVideo(Uri videoContentUri, String destinationDir, int outWidth, int outHeight, int bitrate) throws URISyntaxException {
-        boolean isConverted = MediaController.getInstance().convertVideo(mContext, videoContentUri, new File(destinationDir), outWidth, outHeight, bitrate);
+        boolean isConverted = MediaController.getInstance(mContext).convertVideo(mContext, videoContentUri, new File(destinationDir), outWidth, outHeight, bitrate);
         if (isConverted) {
             Log.v(LOG_TAG, "Video Conversion Complete");
         } else {
@@ -255,10 +257,10 @@ public class SiliCompressor {
         /*if (Pattern.matches("^[.][p][n][g]", filename)){
             ext = ".png";
         }*/
-        String nameFirstPart = file.getAbsolutePath() + "/IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) ;
+        String nameFirstPart = file.getAbsolutePath() + "/IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String nameFull = nameFirstPart + ext;
         int x = 1;
-        while (new File(nameFull).exists()){
+        while (new File(nameFull).exists()) {
             nameFull = nameFirstPart + "_" + x + ext;
             x++;
         }
@@ -366,7 +368,7 @@ public class SiliCompressor {
                 e.printStackTrace();
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 
                 String fileName = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".jpg";
                 ContentValues values = new ContentValues();
