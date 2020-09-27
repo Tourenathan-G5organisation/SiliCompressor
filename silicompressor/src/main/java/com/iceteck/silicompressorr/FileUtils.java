@@ -32,12 +32,12 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
+import com.iceteck.silicompressorr.provider.GenericFileProvider;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.text.DecimalFormat;
 import java.util.Comparator;
-
-import androidx.core.content.FileProvider;
 
 
 /**
@@ -108,7 +108,7 @@ public class FileUtils {
      */
     public static Uri getUri(Context context, File file) {
         if (file != null) {
-            return FileProvider.getUriForFile(context, SiliCompressor.getAuthorities(context), file);
+            return GenericFileProvider.getUriForFile(context, SiliCompressor.getAuthorities(context), file);
             //Uri.fromFile(file);
         }
         return null;

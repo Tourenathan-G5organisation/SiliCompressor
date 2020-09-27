@@ -49,7 +49,7 @@ ext {
     siteUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor'
     gitUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor.git'
 
-    libraryVersion = '2.2.3'
+    libraryVersion = '2.2.4'
 
     developerId = 'tourenathan'
     developerName = 'TEYOU TOURE NATHAN'
