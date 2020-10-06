@@ -156,7 +156,7 @@ public class SiliCompressor {
      * could be in an unknown location
      * This uses default values for the converted videos
      *
-     * @param videoFilePath  source path for the video file
+     * @param videoFilePath  source uri string for the video file
      * @param destinationDir destination directory where converted file should be saved
      * @return The Path of the compressed video file
      */

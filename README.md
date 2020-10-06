@@ -24,18 +24,18 @@ To effectively use this library, you must make sure you have added the following
 ```
 #### Compress a video file and return the file path of the new video
 ```java
-String filePath = SiliCompressor.with(Context).compressVideo(videoPath, destinationDirectory);
+String filePath = SiliCompressor.with(Context).compressVideo(videoUriString, destinationDirectory);
 ```
 ```java
 String filePath = SiliCompressor.with(Context).compressVideo(videoContentUri, destinationDirectory);
 ```
 #### Compress an image and return the file path of the new image
 ```java
-String filePath = SiliCompressor.with(Context).compress(imagePath, destinationDirectory);
+String filePath = SiliCompressor.with(Context).compress(uriString, destinationDirectory);
 ```
 #### Compress an image and return the file path of the new image while deleting the source image
 ```java
-String filePath = SiliCompressor.with(Context).compress(imagePath, destinationDirectory, true);
+String filePath = SiliCompressor.with(Context).compress(uriString, destinationDirectory, true);
 ```
 
 #### Compress an image drawable and return the file path of the new image
@@ -45,12 +45,12 @@ String filePath = SiliCompressor.with(Context).compress(R.drawable.icon);
 
 #### Compress an image and return the bitmap data of the new image
 ```java
-Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imagePath);
+Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imageUriString);
 ```
 
 #### Compress an image and return the bitmap data of the new image while deleting the source image
 ```java
-Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imagePath, true);
+Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imageUriString, true);
 ```
 
 
@@ -58,7 +58,7 @@ Download
 --------
 #### Gradle
 ```groovy
-implementation 'com.iceteck.silicompressorr:silicompressor:2.2.3'
+implementation 'com.iceteck.silicompressorr:silicompressor:2.2.4'
 ```
 
 ##### Maven
@@ -66,10 +66,18 @@ implementation 'com.iceteck.silicompressorr:silicompressor:2.2.3'
 <dependency>
   <groupId>com.iceteck.silicompressorr</groupId>
   <artifactId>silicompressor</artifactId>
-  <version>2.2.3</version>
+  <version>2.2.4</version>
   <type>aar</type>
 </dependency>
 ```
+
+##### Ivy
+```xml
+<dependency org='com.iceteck.silicompressorr' name='silicompressor' rev='2.2.4'>
+  <artifact name='silicompressor' ext='pom' ></artifact>
+</dependency>
+```
+
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
 License
