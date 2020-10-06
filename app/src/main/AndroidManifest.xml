@@ -21,7 +21,7 @@
             </intent-filter>
         </activity>
         <provider
-            android:name=".provider.GenericFileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.silicompressor.provider"
             android:exported="false"
             android:grantUriPermissions="true">
