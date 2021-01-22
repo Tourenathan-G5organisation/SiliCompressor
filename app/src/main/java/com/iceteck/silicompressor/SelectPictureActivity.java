@@ -28,6 +28,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import com.iceteck.silicompressorr.SiliCompressor;
+import com.iceteck.silicompressorr.listener.ProgressListener;
 
 import java.io.File;
 import java.io.IOException;
@@ -327,9 +328,22 @@ public class SelectPictureActivity extends AppCompatActivity {
                             1280,
                             720,
                             1500000);*/
-                    filePath = SiliCompressor.with(mContext).compressVideo(
-                            videoContentUri,
-                            paths[2]);
+                    filePath = SiliCompressor.with(mContext).
+                            setProgressListener(new ProgressListener() {
+                                @Override
+                                public void onProgress(float progress) {
+                                    Log.i("Silicompressor", "COMPRESSION PROGRESS : " + (int)(progress * 100));
+                                }
+
+                                @Override
+                                public void onComplete() {
+
+                                }
+                            }).
+                            compressVideo(
+                                    videoContentUri,
+                                    paths[2]
+                            );
                 }
 
 

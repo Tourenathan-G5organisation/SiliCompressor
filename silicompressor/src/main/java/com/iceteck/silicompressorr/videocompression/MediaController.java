@@ -20,6 +20,8 @@ import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import com.iceteck.silicompressorr.listener.ProgressListener;
+
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
@@ -48,6 +50,7 @@ public class MediaController {
     private final static int PROCESSOR_TYPE_TI = 5;
     private static volatile MediaController Instance = null;
     private boolean videoConvertFirstWrite = true;
+    private ProgressListener progressListener = null;
 
     //Default values
     private final static int DEFAULT_VIDEO_WIDTH = 640;
@@ -66,6 +69,10 @@ public class MediaController {
             }
         }
         return localInstance;
+    }
+
+    public void setProgressListener(ProgressListener progressListener) {
+        this.progressListener = progressListener;
     }
 
     @SuppressLint("NewApi")
@@ -311,6 +318,7 @@ public class MediaController {
         String width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
         String height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
         String rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
+        String durationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
 
         long startTime = -1;
         long endTime = -1;
@@ -318,9 +326,10 @@ public class MediaController {
         int resultWidth = outWidth > 0 ? outWidth : DEFAULT_VIDEO_WIDTH;
         int resultHeight = outHeight > 0 ? outHeight : DEFAULT_VIDEO_HEIGHT;
 
-        int rotationValue = Integer.valueOf(rotation);
-        int originalWidth = Integer.valueOf(width);
-        int originalHeight = Integer.valueOf(height);
+        int rotationValue = rotation == null ? 0 : Integer.parseInt(rotation);
+        int originalWidth = Integer.parseInt(width);
+        int originalHeight = Integer.parseInt(height);
+        long originalDurationUs = Long.parseLong(durationMs) * 1000; // convert to micro-secs
 
         int bitrate = outBitrate > 0 ? outBitrate : DEFAULT_VIDEO_BITRATE;
         int rotateRender = 0;
@@ -592,6 +601,9 @@ public class MediaController {
                                         if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == 0) {
                                             if (mediaMuxer.writeSampleData(videoTrackIndex, encodedData, info, false)) {
                                                 didWriteData(false, false);
+                                                if (progressListener != null) {
+                                                    progressListener.onProgress((float) info.presentationTimeUs / originalDurationUs);
+                                                }
                                             }
                                         } else if (videoTrackIndex == -5) {
                                             byte[] csd = new byte[info.size];
@@ -743,6 +755,9 @@ public class MediaController {
                 if (extractor != null) {
                     extractor.release();
                 }
+                if (retriever != null) {
+                    retriever.release();
+                }
                 if (mediaMuxer != null) {
                     try {
                         mediaMuxer.finishMovie(false);
@@ -759,7 +774,9 @@ public class MediaController {
         didWriteData(true, error);
 
         cachedFile = cacheFile;
-
+        if (progressListener != null) {
+            progressListener.onComplete();
+        }
 
         Log.e("ViratPath", path + "");
         Log.e("ViratPath", cacheFile.getPath() + "");
