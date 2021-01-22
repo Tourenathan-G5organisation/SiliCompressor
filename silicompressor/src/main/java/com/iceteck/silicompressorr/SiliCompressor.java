@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 import androidx.exifinterface.media.ExifInterface;
 
+import com.iceteck.silicompressorr.listener.ProgressListener;
 import com.iceteck.silicompressorr.videocompression.MediaController;
 
 import java.io.File;
@@ -41,6 +42,7 @@ public class SiliCompressor {
 
     static volatile SiliCompressor singleton = null;
     private static Context mContext;
+    private ProgressListener progressListener;
     private static final String FILE_PROVIDER_AUTHORITY = ".iceteck.silicompressor.provider";
 
     public SiliCompressor(Context context) {
@@ -189,13 +191,14 @@ public class SiliCompressor {
      * @return The Path of the compressed video file
      */
     public String compressVideo(String videoFilePath, String destinationDir, int outWidth, int outHeight, int bitrate) throws URISyntaxException {
-        boolean isconverted = MediaController.getInstance(mContext).convertVideo(videoFilePath, new File(destinationDir), outWidth, outHeight, bitrate);
+        MediaController controller = MediaController.getInstance(mContext);
+        controller.setProgressListener(progressListener);
+        boolean isconverted = controller.convertVideo(videoFilePath, new File(destinationDir), outWidth, outHeight, bitrate);
         if (isconverted) {
             Log.v(LOG_TAG, "Video Conversion Complete");
         } else {
             Log.v(LOG_TAG, "Video conversion in progress");
         }
-
         return MediaController.cachedFile.getPath();
 
     }
@@ -211,7 +214,9 @@ public class SiliCompressor {
      * @return The Path of the compressed video file
      */
     public String compressVideo(Uri videoContentUri, String destinationDir, int outWidth, int outHeight, int bitrate) throws URISyntaxException {
-        boolean isConverted = MediaController.getInstance(mContext).convertVideo(mContext, videoContentUri, new File(destinationDir), outWidth, outHeight, bitrate);
+        MediaController controller = MediaController.getInstance(mContext);
+        controller.setProgressListener(progressListener);
+        boolean isConverted = controller.convertVideo(mContext, videoContentUri, new File(destinationDir), outWidth, outHeight, bitrate);
         if (isConverted) {
             Log.v(LOG_TAG, "Video Conversion Complete");
         } else {
@@ -456,6 +461,7 @@ public class SiliCompressor {
         return null;
     }
 
+
     /**
      * Fluent API for creating {@link SiliCompressor} instances.
      */
@@ -484,5 +490,13 @@ public class SiliCompressor {
 
             return new SiliCompressor(context);
         }
+    }
+
+    /**
+     * @param progressListener register a progress listener
+     */
+    public SiliCompressor setProgressListener(ProgressListener progressListener) {
+        this.progressListener = progressListener;
+        return this;
     }
 }
