@@ -668,7 +668,7 @@ public class MediaController {
                                                 outputSurface.awaitNewImage();
                                             } catch (Exception e) {
                                                 errorWait = true;
-                                                Log.e("tmessages", e.getMessage());
+                                                Log.e("tmessages", ""+e.getMessage());
                                             }
                                             if (!errorWait) {
                                                 if (Build.VERSION.SDK_INT >= 18) {
@@ -710,7 +710,7 @@ public class MediaController {
                             videoStartTime = videoTime;
                         }
                     } catch (Exception e) {
-                        Log.e("tmessages", e.getMessage());
+                        Log.e("tmessages", ""+e.getMessage());
                         error = true;
                     }
 
@@ -738,7 +738,7 @@ public class MediaController {
                 }
             } catch (Exception e) {
                 error = true;
-                Log.e("tmessages", e.getMessage());
+                Log.e("tmessages",""+e.getMessage());
             } finally {
                 if (extractor != null) {
                     extractor.release();
@@ -747,7 +747,7 @@ public class MediaController {
                     try {
                         mediaMuxer.finishMovie(false);
                     } catch (Exception e) {
-                        Log.e("tmessages", e.getMessage());
+                        Log.e("tmessages", ""+e.getMessage());
                     }
                 }
                 Log.e("tmessages", "time = " + (System.currentTimeMillis() - time));
@@ -853,7 +853,7 @@ public class MediaController {
                         th.start();
                         th.join();
                     } catch (Exception e) {
-                        Log.e("tmessages", e.getMessage());
+                        Log.e("tmessages", ""+e.getMessage());
                     }
                 }
             }).start();
